@@ -1,0 +1,41 @@
+### Java ###
+*.class
+*.jar
+*.war
+*.ear
+
+### Maven ###
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+.mvn/timing.properties
+.mvn/wrapper/maven-wrapper.jar
+
+### IntelliJ IDEA ###
+.idea/
+*.iml
+*.iws
+*.ipr
+out/
+
+### Selenium & Test Reports ###
+# Thư mục chứa báo cáo mặc định của TestNG
+test-output/
+# Thư mục chứa báo cáo ExtentReports (nếu bạn đặt tên là reports)
+reports/
+# Các file log khi chạy test
+*.log
+
+### Drivers ###
+# Tránh đẩy file .exe của driver lên vì đã có WebDriverManager lo liệu
+*.exe
+drivers/
+
+### OS ###
+.DS_Store
+Thumbs.db
