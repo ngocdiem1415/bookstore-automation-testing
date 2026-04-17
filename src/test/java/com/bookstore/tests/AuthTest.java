@@ -2,25 +2,26 @@ package com.bookstore.tests;
 
 import com.bookstore.base.BaseSetup;
 import com.bookstore.pages.LoginPage;
-import org.openqa.selenium.WebDriver;
+import com.bookstore.pages.SignupPage;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-public class LoginTest extends BaseSetup {
-
-    @Test
-    public void testLoginSuccess() {
-        // Khởi tạo trang Login
+public class AuthTest extends BaseSetup {
+    @Test(description = "Kiểm tra đăng nhập thất bại")
+    public void testLoginFail() {
         LoginPage loginPage = new LoginPage(driver);
+        loginPage.open();
+        loginPage.login("wronguser", "wrongpass");
+        Assert.assertEquals(loginPage.getErrorMessage(), "Sai tên đăng nhập hoặc mật khẩu");
+    }
 
-        // Thực hiện các bước (Steps)
-        loginPage.enterUsername("admin");
-        loginPage.enterPassword("123456");
-        loginPage.clickLogin();
-
-        // Kiểm tra kết quả (Assert)
-        String expectedUrl = "http://localhost:3000/home";
-        Assert.assertEquals(driver.getCurrentUrl(), expectedUrl, "Đăng nhập không thành công!");
+    @Test(description = "Kiểm tra validate mật khẩu realtime (Javascript)")
+    public void testSignupPasswordValidation() {
+        SignupPage signupPage = new SignupPage(driver);
+        signupPage.open();
+        signupPage.enterSignupInfo("", "123", "", "male", "", ""); // Pass yếu
+        Assert.assertEquals(signupPage.getPasswordValidationMsg(),
+                "Mật khẩu phải có ít nhất 6 ký tự, bao gồm cả chữ cái và số!");
     }
 
 }
