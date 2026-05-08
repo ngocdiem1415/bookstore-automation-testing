@@ -15,4 +15,10 @@
             <class name="com.bookstore.tests.AuthTest" />
         </classes>
     </test>
+    <test name="Product List &amp; Filter Tests">
+        <classes>
+            <class name="com.bookstore.tests.ProductListTest" />
+        </classes>
+    </test>
+
 </suite>
