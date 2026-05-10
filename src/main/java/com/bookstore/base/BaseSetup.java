@@ -1,45 +1,33 @@
 package com.bookstore.base;
 
+import com.bookstore.factory.BrowserFactory;
 import io.github.bonigarcia.wdm.WebDriverManager;
+import lombok.Getter;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
+import org.testng.ITestResult;
 import org.testng.annotations.*;
 
+import java.lang.reflect.Method;
 import java.time.Duration;
 
+@Getter
 public class BaseSetup {
     protected WebDriver driver;
-    public static String baseUrl;
+    protected long startTime;
+    protected String baseUrl;
 
-    @Parameters({"appURL"})
-    @BeforeSuite
-    public void getUrlFromXml(String appURL) {
-        baseUrl = appURL;
-    }
-
-    private WebDriver initDriver(String appURL) {
-        System.out.println("Launching Chrome browser...");
-        WebDriverManager.chromedriver().setup(); // quản lý driver
-
-        WebDriver driver = new ChromeDriver();
-        driver.manage().window().maximize();
-        driver.manage().timeouts().pageLoadTimeout(Duration.ofSeconds(30));
-        driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(20));
-
-        driver.get(appURL);
-        return driver;
-    }
-
-    @Parameters({"appURL"})
+    @Parameters({"browser", "appURL"})
     @BeforeClass
-    public void initializeTestBaseSetup(String appURL) {
+    public void initializeTestBaseSetup(String browser, String appURL) {
         try {
-            this.driver = initDriver(appURL);
-            // Tắt log WARNING của Selenium
-            System.setProperty("webdriver.chrome.silentOutput", "true");
-            java.util.logging.Logger.getLogger("org.openqa.selenium").setLevel(java.util.logging.Level.OFF);
+            System.out.println("Initializing " + browser + " browser...");
+            this.driver = BrowserFactory.getBrowser(browser);
+            this.baseUrl = appURL;
+
+            driver.get(appURL);
         } catch (Exception e) {
-            System.out.println("Error... " + e.getMessage());
+            System.err.println("[Error] Cannot initialize driver: " + e.getMessage());
         }
     }
 
@@ -49,5 +37,17 @@ public class BaseSetup {
             System.out.println("Closing browser...");
             driver.quit();
         }
+    }
+
+    @BeforeMethod
+    public void beforeMethod(Method method) {
+        startTime = System.currentTimeMillis();
+        System.out.println("[RUNNING TEST]: " + method.getName());
+    }
+
+    @AfterMethod
+    public void afterMethod(ITestResult result) {
+        long duration = System.currentTimeMillis() - startTime;
+        System.out.println("[EXECUTION TIME]: " + duration + " ms (" + (duration / 1000.0) + "s)");
     }
 }
