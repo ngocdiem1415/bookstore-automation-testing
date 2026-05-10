@@ -7,36 +7,100 @@ import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.FindBy;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 
+/**
+ * Page Object: Trang Đăng nhập (/login)
+ * Covers: AUTH-LOG-01, AUTH-LOG-02, AUTH-LOG-03, AUTH-LOG-04, AUTH-LOG-05
+ */
 public class LoginPage extends BasePage{
     private final String PAGE_URL = "/login";
 
-    public void open() {
-        driver.get(BaseSetup.baseUrl + PAGE_URL);
-    }
+    @FindBy(css = "[data-testid='login-username']")
+    private WebElement txtUsername;
 
-    @FindBy(id = "username")
-    private WebElement usernameInput;
+    @FindBy(css = "[data-testid='login-password']")
+    private WebElement txtPassword;
 
-    @FindBy(id = "password")
-    private WebElement passwordInput;
+    @FindBy(css = "[data-testid='login-submit-btn']")
+    private WebElement btnLoginSubmit;
 
-    @FindBy(css = ".form-submit-sign-in")
-    private WebElement loginButton;
+    @FindBy(css = "[data-testid='login-error-message']")
+    private WebElement lblErrorMessage;
 
-    @FindBy(css = ".text-danger")
-    private WebElement errorMessage;
+    @FindBy(css = "[data-testid='link-to-signup']")
+    private WebElement lnkToSignup;
+
+    @FindBy(css = "[data-testid='link-to-forgot-password']")
+    private WebElement lnkToForgotPassword;
 
     public LoginPage(WebDriver driver) {
         super(driver);
     }
 
-    public void login(String user, String pass) {
-        sendText(usernameInput, user);
-        sendText(passwordInput, pass);
-        clickElement(loginButton);
+    public LoginPage open() {
+        driver.get(getCurrentUrl() + PAGE_URL);
+        return this;
+    }
+
+    public LoginPage enterUsername(String username) {
+        clearAndSendText(txtUsername, username);
+        return this;
+    }
+
+    public LoginPage enterPassword(String password) {
+        clearAndSendText(txtPassword, password);
+        return this;
+    }
+
+    public LoginPage clickLoginExpectingFailure() {
+        clickElement(btnLoginSubmit);
+        return this;
+    }
+
+    public HomePage clickLoginAsCustomer() {
+        clickElement(btnLoginSubmit);
+        return new HomePage(driver);
+    }
+
+    public AdminDashboardPage clickLoginAsAdmin() {
+        clickElement(btnLoginSubmit);
+        return new AdminDashboardPage(driver);
+    }
+
+
+    public HomePage loginAsCustomer(String username, String password) {
+        return enterUsername(username)
+                .enterPassword(password)
+                .clickLoginAsCustomer();
+    }
+
+
+    public AdminDashboardPage loginAsAdmin(String username, String password) {
+        return enterUsername(username)
+                .enterPassword(password)
+                .clickLoginAsAdmin();
+    }
+
+    public SignupPage clickLinkToSignup() {
+        System.out.println("[LoginPage] Clicking link to Signup page...");
+        clickElement(lnkToSignup);
+        return new SignupPage(driver);
+    }
+
+    public ForgotPasswordPage clickLinkToForgotPassword() {
+        System.out.println("[LoginPage] Clicking link to Forgot Password page...");
+        clickElement(lnkToForgotPassword);
+        return new ForgotPasswordPage(driver);
     }
 
     public String getErrorMessage() {
-        return wait.until(ExpectedConditions.visibilityOf(errorMessage)).getText();
+        return wait.until(ExpectedConditions.visibilityOf(lblErrorMessage)).getText().trim();
+    }
+
+    public boolean isOnLoginPage() {
+        return driver.getCurrentUrl().contains("/login");
+    }
+
+    public String getCurrentUrl() {
+        return driver.getCurrentUrl();
     }
 }

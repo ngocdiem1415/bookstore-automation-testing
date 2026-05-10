@@ -13,7 +13,7 @@ public class HomePage extends BasePage {
     private final String PAGE_URL = "/home";
 
     public void open() {
-        driver.get(BaseSetup.baseUrl + PAGE_URL);
+        driver.get(getCurrentUrl() + PAGE_URL);
     }
 
     @FindBy(id = "carouselExampleIndicators")

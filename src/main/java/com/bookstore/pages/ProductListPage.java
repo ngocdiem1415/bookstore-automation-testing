@@ -91,7 +91,7 @@ public class ProductListPage extends BasePage {
 
     /** Mở trực tiếp trang danh sách sản phẩm */
     public void open() {
-        driver.get(BaseSetup.baseUrl + PAGE_URL);
+        driver.get(getCurrentUrl()+ PAGE_URL);
     }
 
 
