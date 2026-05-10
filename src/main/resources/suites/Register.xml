@@ -5,12 +5,9 @@
         <classes>
             <class name="com.bookstore.tests.RegisterTest">
                 <methods>
-                    <include name="AUTH_LOG_01_LoginSuccessCustomer" />
-                    <include name="AUTH_LOG_02_LoginSuccessAdmin"/>
-                    <include name="AUTH_LOG_03_LoginSuccessOrderStaff"/>
-                    <include name="AUTH_LOG_04_LoginFailInvalidPassword"/>
-                    <include name="AUTH_LOG_05_LoginFailSQLInjection"/>
-                    <include name="AUTH_OUT_01_LogoutSuccess"/>
+                    <include name="AUTH_REG_01_RegistrationSuccess"/>
+                    <include name="AUTH_REG_02_RegistrationFailExistingUser"/>
+                    <include name="AUTH_REG_03_RegistrationFailInvalidPassword"/>
                 </methods>
             </class>
         </classes>

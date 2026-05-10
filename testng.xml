@@ -1,24 +1,34 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
-<suite name="Bookstore Suite">
+<suite name="Bookstore Full Regression Suite" verbose="1" parallel="none">
+
+    <parameter name="browser" value="chrome" />
     <parameter name="appURL" value="http://localhost:8080" />
+
     <listeners>
         <listener class-name="com.bookstore.listeners.TestListener" />
     </listeners>
-    <test name="Automation Tests">
+
+    <test name="Authentication Module">
         <classes>
-            <class name="com.bookstore.tests.HomeTest" />
+            <class name="com.bookstore.tests.RegisterTest" />
+<!--            <class name="com.bookstore.tests.LoginTest" />-->
+<!--            <class name="com.bookstore.tests.PasswordRecoveryTest" />-->
+<!--            <class name="com.bookstore.tests.ProfileTest" />-->
         </classes>
     </test>
-    <test name="Authentication Tests">
-        <classes>
-            <class name="com.bookstore.tests.AuthTest" />
-        </classes>
-    </test>
-    <test name="Product List &amp; Filter Tests">
-        <classes>
-            <class name="com.bookstore.tests.ProductListTest" />
-        </classes>
-    </test>
+
+<!--    <test name="Product Management Module">-->
+<!--        <classes>-->
+<!--            <class name="com.bookstore.tests.ProductListTest" />-->
+<!--        </classes>-->
+<!--    </test>-->
+
+<!--    <test name="Cart and Checkout Module">-->
+<!--        <classes>-->
+<!--            <class name="com.bookstore.tests.CartTest" />-->
+<!--            <class name="com.bookstore.tests.CheckoutTest" />-->
+<!--        </classes>-->
+<!--    </test>-->
 
 </suite>

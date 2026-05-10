@@ -6,7 +6,7 @@ import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-public class ProductListTest extends BaseSetup {
+public class ProductTest extends BaseSetup {
 
     private ProductListPage productListPage;
 
