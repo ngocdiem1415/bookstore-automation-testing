@@ -15,13 +15,15 @@ import java.time.format.DateTimeFormatter;
 public class BasePage {
     protected WebDriver driver;
     protected WebDriverWait wait;
+    protected String baseUrl;
 
     public static final int EXPLICIT_WAIT_SECONDS = 15;
     private static final String SCREENSHOT_DIR = "test-output/screenshots/";
 
-    public BasePage(WebDriver driver) {
+    public BasePage(WebDriver driver, String baseUrl) {
         this.driver = driver;
         this.wait = new WebDriverWait(driver, Duration.ofSeconds(EXPLICIT_WAIT_SECONDS));
+        this.baseUrl = baseUrl;
         PageFactory.initElements(driver, this);
     }
 
