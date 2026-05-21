@@ -34,8 +34,8 @@ public class ResetPasswordPage extends BasePage {
     // CONSTRUCTOR
     // ===========================
 
-    public ResetPasswordPage(WebDriver driver) {
-        super(driver);
+    public ResetPasswordPage(WebDriver driver,String baseUrl) {
+        super(driver, baseUrl);
     }
 
     // ===========================
@@ -87,7 +87,7 @@ public class ResetPasswordPage extends BasePage {
     public LoginPage clickSubmitExpectingSuccess() {
         System.out.println("[ResetPasswordPage] Clicking reset submit (expecting success → /login)...");
         clickElement(btnResetSubmit);
-        return new LoginPage(driver);
+        return new LoginPage(driver, baseUrl);
     }
 
     /**

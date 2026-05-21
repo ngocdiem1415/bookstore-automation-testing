@@ -44,8 +44,8 @@ public class ProfilePage extends BasePage {
     // CONSTRUCTOR
     // ===========================
 
-    public ProfilePage(WebDriver driver) {
-        super(driver);
+    public ProfilePage(WebDriver driver,String baseUrl) {
+        super(driver, baseUrl);
     }
 
     // ===========================

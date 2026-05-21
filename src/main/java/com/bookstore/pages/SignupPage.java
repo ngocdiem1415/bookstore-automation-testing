@@ -1,18 +1,23 @@
 package com.bookstore.pages;
 
 import com.bookstore.base.BaseSetup;
+import org.openqa.selenium.JavascriptExecutor;
+import org.openqa.selenium.Keys;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.FindBy;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.Select;
+import org.openqa.selenium.support.ui.WebDriverWait;
+
+import java.time.Duration;
 
 /**
  * Page Object: Trang Đăng ký (/signup)
  * Covers: AUTH-REG-01, AUTH-REG-02, AUTH-REG-03
  */
 public class SignupPage extends BasePage {
-    private static final String PAGE_URL = "signup";
+    private static final String PAGE_URL = "/signup";
 
     @FindBy(css = "[data-testid='register-username']")
     private WebElement txtRegisterUsername;
@@ -38,12 +43,21 @@ public class SignupPage extends BasePage {
     @FindBy(css = "[data-testid='register-error-message']")
     private WebElement lblRegisterErrorMessage;
 
-    public SignupPage(WebDriver driver) {
-        super(driver);
+    @FindBy(css = "[data-testid='register-pass-warning']")
+    private WebElement pRegisterCheckPwdMessage;
+
+    @FindBy(css = "[data-testid='verify-code-input']")
+    private WebElement txtVerifyCode;
+
+    @FindBy(css = "[data-testid='verify-submit-btn']")
+    private WebElement btnVerify;
+
+    public SignupPage(WebDriver driver, String baseUrl) {
+        super(driver, baseUrl);
     }
 
     public SignupPage open() {
-        driver.get(getCurrentUrl() + PAGE_URL);
+        driver.get(baseUrl + PAGE_URL);
         return this;
     }
 
@@ -53,7 +67,10 @@ public class SignupPage extends BasePage {
     }
 
     public SignupPage enterPassword(String password) {
-        clearAndSendText(txtRegisterPassword, password);
+        txtRegisterPassword.clear();
+        txtRegisterPassword.click();
+        txtRegisterPassword.sendKeys(password);
+        txtRegisterPassword.sendKeys(Keys.TAB);
         return this;
     }
 
@@ -68,7 +85,9 @@ public class SignupPage extends BasePage {
         return this;
     }
 
-    /** format: dd/MM/yyyy */
+    /**
+     * format: dd/MM/yyyy
+     */
     public SignupPage enterBirthdate(String birthdate) {
         clearAndSendText(txtRegisterBirthdate, birthdate);
         return this;
@@ -90,42 +109,83 @@ public class SignupPage extends BasePage {
     }
 
     public void clickSubmitExpectingSuccess() {
-        clickElement(btnRegisterSubmit);
+        WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
+        wait.until(ExpectedConditions.elementToBeClickable(btnRegisterSubmit));
+        btnRegisterSubmit.click();
     }
 
     public SignupPage clickSubmitExpectingFailure() {
-        System.out.println("[SignupPage] Clicking register submit (expecting failure)...");
-        clickElement(btnRegisterSubmit);
+        WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
+        ((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView(true);", btnRegisterSubmit);
+        try { Thread.sleep(500); } catch (InterruptedException e) {}
+        if (!btnRegisterSubmit.isEnabled()) {
+            System.out.println("[DEBUG] Nút đang bị khóa, dùng JS Click để ép gửi form...");
+            ((JavascriptExecutor) driver).executeScript("arguments[0].click();", btnRegisterSubmit);
+        } else {
+            btnRegisterSubmit.click();
+        }
         return this;
     }
 
     public String getErrorMessage() {
-        System.out.println("[SignupPage] Getting error/success message...");
         return wait.until(ExpectedConditions.visibilityOf(lblRegisterErrorMessage)).getText().trim();
     }
 
-    public boolean isSubmitButtonEnabled() {
-        return btnRegisterSubmit.isEnabled();
+    public String getCheckPwdWarning() {
+        return wait.until(ExpectedConditions.visibilityOf(pRegisterCheckPwdMessage)).getText().trim();
     }
+
+    public boolean isSubmitButtonEnabled() {
+        return btnRegisterSubmit.isDisplayed() && btnRegisterSubmit.isEnabled();    }
 
     public String getCurrentUrl() {
         return driver.getCurrentUrl();
     }
 
     public boolean isOnEmailVerifyPage() {
-        return driver.getCurrentUrl().contains("email-verify");
+        try {
+            return wait.until(ExpectedConditions.visibilityOf(txtVerifyCode)).isDisplayed();
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    public boolean isRedirectedToSuccess() {
+        try {
+            WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
+            return wait.until(ExpectedConditions.urlContains("/success"));
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+
+    public void enterVerifyCode(String code) {
+        WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
+        WebElement input = wait.until(ExpectedConditions.elementToBeClickable(txtVerifyCode));
+
+        input.clear();
+        input.click();
+
+        input.sendKeys(code);
+    }
+
+    public void clickVerify() {
+        JavascriptExecutor js = (JavascriptExecutor) driver;
+        js.executeScript("arguments[0].click();", btnVerify);
     }
 
     public boolean isOnSignupPage() {
         return driver.getCurrentUrl().contains("/signup");
     }
 
-    /**
-     * Lấy validation message từ HTML5 browser (constraint validation API).
-     * Dùng JS để lấy validationMessage của input password.
-     */
     public String getPasswordValidationMessage() {
-        return (String) ((org.openqa.selenium.JavascriptExecutor) driver)
+        return (String) ((JavascriptExecutor) driver)
                 .executeScript("return arguments[0].validationMessage;", txtRegisterPassword);
+    }
+
+    public boolean isPasswordMessageCorrect(String expectedMessage) {
+        String actualMessage = getPasswordValidationMessage();
+        return actualMessage != null && actualMessage.contains(expectedMessage);
     }
 }

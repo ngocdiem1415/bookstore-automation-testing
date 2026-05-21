@@ -1,5 +1,6 @@
 package com.bookstore.pages.components;
 
+import com.bookstore.pages.BasePage;
 import com.bookstore.pages.HomePage;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
@@ -16,9 +17,7 @@ import static com.bookstore.pages.BasePage.EXPLICIT_WAIT_SECONDS;
  * Component: Header (thanh điều hướng trên cùng).
  * Covers: AUTH-OUT-01
  */
-public class HeaderComponent {
-    private final WebDriver driver;
-    private final WebDriverWait wait;
+public class HeaderComponent extends BasePage {
 
     @FindBy(css = "[data-testid='header-search-input']")
     private WebElement txtSearchInput;
@@ -41,10 +40,8 @@ public class HeaderComponent {
     @FindBy(css = "[data-testid='header-signup-btn']")
     private WebElement lnkSignup;
 
-    public HeaderComponent(WebDriver driver) {
-        this.driver = driver;
-        this.wait = new WebDriverWait(driver, Duration.ofSeconds(EXPLICIT_WAIT_SECONDS));
-        PageFactory.initElements(driver, this);
+    public HeaderComponent(WebDriver driver, String baseUrl) {
+        super(driver, baseUrl);
     }
 
     public HeaderComponent enterSearchKeyword(String keyword) {
@@ -68,22 +65,22 @@ public class HeaderComponent {
         } catch (Exception e) {
         }
         wait.until(ExpectedConditions.elementToBeClickable(lnkLogout)).click();
-        return new HomePage(driver);
+        return new HomePage(driver,baseUrl);
     }
 
 
-    public HomePage navigateToLogout(String baseUrl) {
+    public HomePage navigateToLogout() {
         driver.get(baseUrl + "/logout");
-        return new HomePage(driver);
+        return new HomePage(driver, baseUrl);
     }
 
-    public boolean isLoginButtonVisible() {
-        try {
-            return wait.until(ExpectedConditions.visibilityOf(lnkLogin)).isDisplayed();
-        } catch (Exception e) {
-            return false;
-        }
-    }
+//    public boolean isLoginButtonVisible() {
+//        try {
+//            return wait.until(ExpectedConditions.visibilityOf(lnkLogin)).isDisplayed();
+//        } catch (Exception e) {
+//            return false;
+//        }
+//    }
 
     public boolean isLogoutButtonVisible() {
         try {

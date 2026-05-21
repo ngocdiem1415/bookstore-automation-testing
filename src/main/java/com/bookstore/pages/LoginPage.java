@@ -32,12 +32,12 @@ public class LoginPage extends BasePage{
     @FindBy(css = "[data-testid='link-to-forgot-password']")
     private WebElement lnkToForgotPassword;
 
-    public LoginPage(WebDriver driver) {
-        super(driver);
+    public LoginPage(WebDriver driver, String baseUrl) {
+        super(driver, baseUrl);
     }
 
     public LoginPage open() {
-        driver.get(getCurrentUrl() + PAGE_URL);
+        driver.get(baseUrl + PAGE_URL);
         return this;
     }
 
@@ -58,12 +58,12 @@ public class LoginPage extends BasePage{
 
     public HomePage clickLoginAsCustomer() {
         clickElement(btnLoginSubmit);
-        return new HomePage(driver);
+        return new HomePage(driver, baseUrl);
     }
 
     public AdminDashboardPage clickLoginAsAdmin() {
         clickElement(btnLoginSubmit);
-        return new AdminDashboardPage(driver);
+        return new AdminDashboardPage(driver, baseUrl);
     }
 
 
@@ -83,13 +83,13 @@ public class LoginPage extends BasePage{
     public SignupPage clickLinkToSignup() {
         System.out.println("[LoginPage] Clicking link to Signup page...");
         clickElement(lnkToSignup);
-        return new SignupPage(driver);
+        return new SignupPage(driver, baseUrl);
     }
 
     public ForgotPasswordPage clickLinkToForgotPassword() {
         System.out.println("[LoginPage] Clicking link to Forgot Password page...");
         clickElement(lnkToForgotPassword);
-        return new ForgotPasswordPage(driver);
+        return new ForgotPasswordPage(driver, baseUrl);
     }
 
     public String getErrorMessage() {

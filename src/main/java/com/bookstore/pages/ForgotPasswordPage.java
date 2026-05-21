@@ -31,8 +31,8 @@ public class ForgotPasswordPage extends BasePage {
     // CONSTRUCTOR
     // ===========================
 
-    public ForgotPasswordPage(WebDriver driver) {
-        super(driver);
+    public ForgotPasswordPage(WebDriver driver,String baseUrl) {
+        super(driver, baseUrl);
     }
 
     // ===========================

@@ -1,4 +1,4 @@
-package com.bookstore.tests;
+package com.bookstore.tests.auth;
 
 import com.bookstore.base.BaseSetup;
 import com.bookstore.pages.ForgotPasswordPage;
@@ -13,7 +13,7 @@ public class PasswordRecoveryTest extends BaseSetup {
     public void AUTH_FGP_01_ForgotPasswordValidEmail() {
 
         System.out.println("[Step 1] Navigate to Forgot Password page (/forget-password)");
-        ForgotPasswordPage forgotPage = new ForgotPasswordPage(driver);
+        ForgotPasswordPage forgotPage = new ForgotPasswordPage(driver, baseUrl);
         forgotPage.open();
 
         System.out.println("[Step 2] Input valid email");
@@ -31,7 +31,7 @@ public class PasswordRecoveryTest extends BaseSetup {
     public void AUTH_FGP_02_ForgotPasswordNonExistentEmail() {
 
         System.out.println("[Step 1] Navigate to Forgot Password page");
-        ForgotPasswordPage forgotPage = new ForgotPasswordPage(driver);
+        ForgotPasswordPage forgotPage = new ForgotPasswordPage(driver, baseUrl);
         forgotPage.open();
 
         System.out.println("[Step 2] Input non-existent email: null@gmail.com");
@@ -50,7 +50,7 @@ public class PasswordRecoveryTest extends BaseSetup {
     public void AUTH_FGP_03_ForgotPasswordRateLimiting() {
 
         System.out.println("[Step 1] Navigate to Forgot Password page");
-        ForgotPasswordPage forgotPage = new ForgotPasswordPage(driver);
+        ForgotPasswordPage forgotPage = new ForgotPasswordPage(driver, baseUrl);
         forgotPage.open();
 
         System.out.println("[Step 2] Input valid email");
@@ -70,7 +70,7 @@ public class PasswordRecoveryTest extends BaseSetup {
     public void AUTH_RST_01_ResetPasswordValidToken() {
         String validToken = "VALID_TOKEN_FROM_EMAIL";
         System.out.println("[Step 1] Navigate to Reset password link with valid token");
-        ResetPasswordPage resetPage = new ResetPasswordPage(driver);
+        ResetPasswordPage resetPage = new ResetPasswordPage(driver, baseUrl);
         resetPage.openWithToken(validToken);
 
         System.out.println("[Step 2] Input new password and confirm password");
@@ -91,7 +91,7 @@ public class PasswordRecoveryTest extends BaseSetup {
     public void AUTH_RST_02_ResetPasswordMismatch() {
 
         System.out.println("[Step 1] Navigate to Reset password link");
-        ResetPasswordPage resetPage = new ResetPasswordPage(driver);
+        ResetPasswordPage resetPage = new ResetPasswordPage(driver, baseUrl);
         resetPage.openWithToken("VALID_TOKEN_FROM_EMAIL");
 
         System.out.println("[Step 2] Input mismatching passwords");
@@ -112,7 +112,7 @@ public class PasswordRecoveryTest extends BaseSetup {
     public void AUTH_RST_03_ResetPasswordExpiredToken() {
 
         System.out.println("[Step 1] Navigate to expired Reset password link (after 24h)");
-        ResetPasswordPage resetPage = new ResetPasswordPage(driver);
+        ResetPasswordPage resetPage = new ResetPasswordPage(driver,baseUrl);
         resetPage.openWithExpiredToken("EXPIRED_TOKEN_AFTER_24H");
 
         System.out.println("[Step 2] Input valid passwords");
