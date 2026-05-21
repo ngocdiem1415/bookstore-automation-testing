@@ -19,7 +19,7 @@ public class BaseSetup {
 
     @Parameters({"browser", "appURL"})
     @BeforeClass
-    public void initializeTestBaseSetup(String browser, String appURL) {
+    public void initializeTestBaseSetup(@Optional("chrome") String browser, @Optional("http://localhost:8080") String appURL) {
         try {
             System.out.println("Initializing " + browser + " browser...");
             this.driver = BrowserFactory.getBrowser(browser);
