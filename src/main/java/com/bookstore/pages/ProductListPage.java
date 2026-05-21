@@ -1,6 +1,7 @@
 package com.bookstore.pages;
 
 import com.bookstore.base.BaseSetup;
+import com.bookstore.factory.PageFactoryManager;
 import org.openqa.selenium.By;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebDriver;
@@ -11,318 +12,211 @@ import org.openqa.selenium.support.ui.Select;
 
 import java.util.List;
 
+/**
+ * Page Object: Trang danh sách sản phẩm (/listBook).
+ * Covers: PROD-NAV, PROD-FIL, PROD-SRT
+ */
 public class ProductListPage extends BasePage {
 
-    private static final String PAGE_URL = "/books";
+    private static final String PAGE_URL = "/listBook";
+    private static final By BOOK_ITEM_LOCATOR    = By.cssSelector("[data-testid='book-item']");
+    private static final By BOOK_NAME_IN_CARD    = By.cssSelector(".product-name");
+    private static final By BOOK_PRICE_IN_CARD   = By.cssSelector(".product-price");
+    private static final By PAGINATION_ITEMS     = By.cssSelector("#pagination .page-item");
+    private static final By NEXT_PAGE_BTN        = By.cssSelector(
+            "#pagination .page-item.next .page-link, #pagination .page-item:last-child .page-link");
 
-    /** Card từng sản phẩm trong danh sách kết quả */
-    private static final By BOOK_ITEM_LOCATOR =
-            By.cssSelector(".product-item");
+    // --- Filter: Category ---
+    @FindBy(css = "[data-testid='filter-category']")
+    private List<WebElement> radioFilterCategory;
 
-    /** Tên sách trong mỗi card */
-    private static final By BOOK_NAME_IN_CARD =
-            By.cssSelector(".product-name");
+    // --- Filter: Price ---
+    @FindBy(css = "[data-testid='filter-price']")
+    private List<WebElement> radioFilterPrice;
 
-    /** Giá hiện tại trong mỗi card */
-    private static final By BOOK_PRICE_IN_CARD =
-            By.cssSelector(".product-price");
+    // --- Filter: Sort ---
+    @FindBy(css = "[data-testid='filter-sort']")
+    private WebElement selFilterSort;
 
-    /** Li items trong pagination */
-    private static final By PAGINATION_ITEMS =
-            By.cssSelector("#pagination .page-item");
-
-    /** Nút trang tiếp theo */
-    private static final By NEXT_PAGE_BTN =
-            By.cssSelector("#pagination .page-item.next .page-link, "
-                    + "#pagination .page-item:last-child .page-link");
-
-    // ------  Search  ------
-
-    /** Ô tìm kiếm trong header */
-    @FindBy(id = "searchInput")
-    private WebElement searchInput;
-
-    /** Nút kính lúp / submit tìm kiếm */
-    @FindBy(css = "button.search-btn")
-    private WebElement searchButton;
-
-    // ------  Sort (Sắp xếp)  ------
-
-    /** Dropdown sắp xếp sản phẩm */
-    @FindBy(id = "sort-by")
-    private WebElement sortDropdown;
-
-    /** Tất cả radio chọn thể loại */
-    @FindBy(css = "input[name='category']")
-    private List<WebElement> categoryRadios;
-
-    /** Tất cả radio chọn nhà xuất bản */
-    @FindBy(css = "input[name='publisher']")
-    private List<WebElement> publisherRadios;
-
-    /** Tất cả radio khoảng giá */
-    @FindBy(css = "input[name='priceRange']")
-    private List<WebElement> priceRangeRadios;
-
-    /** Tất cả radio đánh giá sao */
-    @FindBy(css = "input[name='rating']")
-    private List<WebElement> ratingRadios;
-
-    /**
-     * Container chính chứa danh sách sản phẩm.
-     * Dùng id — định danh duy nhất, ổn định nhất với DOM thay đổi do AJAX.
-     */
+    // --- Result area ---
     @FindBy(id = "product-container")
     private WebElement productContainer;
 
-
-    /** Thông báo khi không tìm thấy sách */
     @FindBy(css = ".no-result-message")
     private WebElement noResultMessage;
 
-    /** UL/nav phân trang */
     @FindBy(id = "pagination")
     private WebElement paginationWrapper;
 
-    public ProductListPage(WebDriver driver) {
-        super(driver);
+    @FindBy(id = "searchInput")
+    private WebElement searchInput;
+
+    @FindBy(css = "button.search-btn")
+    private WebElement searchButton;
+
+    public ProductListPage(WebDriver driver,String baseUrl) {
+        super(driver,baseUrl);
     }
 
-
-    /** Mở trực tiếp trang danh sách sản phẩm */
-    public void open() {
-        driver.get(getCurrentUrl()+ PAGE_URL);
-    }
-
-
-    /**
-     * Nhập từ khoá và bấm tìm kiếm.
-     *
-     * @param keyword từ khoá cần tìm
-     */
-    public void searchBook(String keyword) {
-        sendText(searchInput, keyword);
-        clickElement(searchButton);
-        waitForProductsToLoad();
+    public ProductListPage open() {
+        driver.get(getCurrentUrl() + PAGE_URL);
+        return this;
     }
 
     /**
-     * Lấy giá trị hiện tại trong ô tìm kiếm.
-     *
-     * @return text trong search input attribute "value"
+     * Điều hướng thẳng đến URL tùy ý (dùng cho Boundary tests).
      */
-    public String getSearchInputValue() {
-        wait.until(ExpectedConditions.visibilityOf(searchInput));
-        return searchInput.getAttribute("value");
-    }
-
-
-    /**
-     * Chọn tuỳ chọn sắp xếp theo text hiển thị trong dropdown.
-     *
-     * @param visibleText text của option (e.g. "Giá tăng dần", "Tên A→Z")
-     */
-    public void sortBy(String visibleText) {
-        wait.until(ExpectedConditions.elementToBeClickable(sortDropdown));
-        new Select(sortDropdown).selectByVisibleText(visibleText);
-        waitForProductsToLoad();
+    public ProductListPage navigateTo(String url) {
+        System.out.println("[ProductListPage] Navigating to URL: " + url);
+        driver.get(url);
+        return this;
     }
 
     /**
-     * Lấy option đang được chọn hiện tại trong dropdown sắp xếp.
-     *
-     * @return text của option đang chọn
+     * PROD-NAV-01/02: Chọn [filter-category] radio button theo label text.
+     * @param categoryLabel Ví dụ: "Tiểu thuyết", "Sách test"
      */
-    public String getSelectedSortOption() {
-        wait.until(ExpectedConditions.visibilityOf(sortDropdown));
-        return new Select(sortDropdown).getFirstSelectedOption().getText().trim();
-    }
-
-    /**
-     * Chọn bộ lọc thể loại sách theo giá trị {@code value} của radio button.
-     *
-     * @param categoryValue value attribute (e.g. "van-hoc", "ky-nang-song")
-     */
-    public void filterByCategory(String categoryValue) {
-        selectRadioByValue(categoryRadios, categoryValue);
-        waitForProductsToLoad();
-    }
-
-    /**
-     * Kiểm tra radio thể loại đang được chọn hay chưa.
-     *
-     * @param categoryValue value cần kiểm tra
-     * @return true nếu radio đó đang checked
-     */
-    public boolean isCategorySelected(String categoryValue) {
-        return isRadioSelected(categoryRadios, categoryValue);
-    }
-
-    /**
-     * Chọn bộ lọc nhà xuất bản.
-     *
-     * @param publisherValue value attribute (e.g. "nxb-tre", "nxb-kim-dong")
-     */
-    public void filterByPublisher(String publisherValue) {
-        selectRadioByValue(publisherRadios, publisherValue);
-        waitForProductsToLoad();
-    }
-
-
-    /**
-     * Chọn bộ lọc khoảng giá.
-     *
-     * @param priceRangeValue value (e.g. "0-100000", "100000-200000")
-     */
-    public void filterByPriceRange(String priceRangeValue) {
-        selectRadioByValue(priceRangeRadios, priceRangeValue);
-        waitForProductsToLoad();
-    }
-
-    /**
-     * Chọn bộ lọc đánh giá sao.
-     *
-     * @param ratingValue value (e.g. "4" = 4 sao trở lên, "5" = 5 sao)
-     */
-    public void filterByRating(String ratingValue) {
-        selectRadioByValue(ratingRadios, ratingValue);
-        waitForProductsToLoad();
-    }
-
-
-    /**
-     * Lấy danh sách tất cả sản phẩm đang hiển thị trên trang.
-     *
-     * @return List WebElement của các book card
-     */
-    public List<WebElement> getDisplayedBooks() {
-        wait.until(ExpectedConditions.visibilityOfElementLocated(BOOK_ITEM_LOCATOR));
-        return driver.findElements(BOOK_ITEM_LOCATOR);
-    }
-
-    /**
-     * Số lượng sách đang hiển thị.
-     *
-     * @return số card sách; 0 nếu không có
-     */
-    public int getBookCount() {
-        try {
-            return getDisplayedBooks().size();
-        } catch (Exception e) {
-            return 0;
-        }
-    }
-
-    /**
-     * Tên sách tại vị trí index (0-based).
-     *
-     * @param index vị trí card sách
-     * @return chuỗi tên sách đã trim()
-     */
-    public String getBookNameAt(int index) {
-        List<WebElement> books = getDisplayedBooks();
-        validateIndex(index, books.size());
-        return books.get(index).findElement(BOOK_NAME_IN_CARD).getText().trim();
-    }
-
-    /**
-     * Giá hiện tại của sách tại vị trí index.
-     *
-     * @param index vị trí card sách
-     * @return chuỗi giá (e.g. "120.000đ")
-     */
-    public String getBookPriceAt(int index) {
-        List<WebElement> books = getDisplayedBooks();
-        validateIndex(index, books.size());
-        return books.get(index).findElement(BOOK_PRICE_IN_CARD).getText().trim();
-    }
-
-    /**
-     * Kiểm tra product-container có hiển thị trên trang không.
-     *
-     * @return true nếu visible
-     */
-    public boolean isProductContainerDisplayed() {
-        try {
-            return wait.until(ExpectedConditions.visibilityOf(productContainer)).isDisplayed();
-        } catch (Exception e) {
-            return false;
-        }
-    }
-
-    /**
-     * Kiểm tra thông báo "không tìm thấy kết quả" hiển thị.
-     *
-     * @return true nếu thông báo visible
-     */
-    public boolean isNoResultMessageDisplayed() {
-        try {
-            return wait.until(ExpectedConditions.visibilityOf(noResultMessage)).isDisplayed();
-        } catch (Exception e) {
-            return false;
-        }
-    }
-
-    /**
-     * Số lượng items trong pagination.
-     *
-     * @return số page items; 0 nếu không có pagination
-     */
-    public int getPaginationCount() {
-        try {
-            wait.until(ExpectedConditions.visibilityOf(paginationWrapper));
-            return driver.findElements(PAGINATION_ITEMS).size();
-        } catch (Exception e) {
-            return 0;
-        }
-    }
-
-    /** Điều hướng sang trang tiếp theo. */
-    public void goToNextPage() {
-        WebElement nextBtn = wait.until(
-                ExpectedConditions.elementToBeClickable(NEXT_PAGE_BTN));
-        nextBtn.click();
-        waitForProductsToLoad();
-    }
-
-    private void selectRadioByValue(List<WebElement> radios, String targetValue) {
+    public ProductListPage filterByCategory(String categoryLabel) {
+        System.out.println("[ProductListPage] Filtering by category: " + categoryLabel);
         boolean found = false;
-        for (WebElement radio : radios) {
+        for (WebElement radio : radioFilterCategory) {
+            // Lấy label text từ label[for] tương ứng
             String val = radio.getAttribute("value");
-            if (targetValue.equalsIgnoreCase(val)) {
+            String label = "";
+            try {
+                String id = radio.getAttribute("id");
+                label = driver.findElement(By.cssSelector("label[for='" + id + "']")).getText().trim();
+            } catch (Exception ignored) {
+                label = val;
+            }
+            if (label.equalsIgnoreCase(categoryLabel) || val.equalsIgnoreCase(categoryLabel)) {
                 ((JavascriptExecutor) driver).executeScript("arguments[0].click();", radio);
                 found = true;
                 break;
             }
         }
-        if (!found) {
-            throw new IllegalArgumentException(
-                    "Không tìm thấy radio với value='" + targetValue + "'");
-        }
-    }
-
-
-    private boolean isRadioSelected(List<WebElement> radios, String targetValue) {
-        for (WebElement radio : radios) {
-            if (targetValue.equalsIgnoreCase(radio.getAttribute("value"))) {
-                return radio.isSelected();
-            }
-        }
-        return false;
-    }
-
-    private void waitForProductsToLoad() {
-        wait.until(ExpectedConditions.visibilityOfElementLocated(
-                By.id("product-container")));
+        if (!found) throw new IllegalArgumentException("Không tìm thấy category: " + categoryLabel);
+        waitForProductsToLoad();
+        return this;
     }
 
     /**
-     * Kiểm tra index hợp lệ để tránh IndexOutOfBoundsException.
+     * PROD-FIL-01: Chọn [filter-price] radio button theo value range.
+     * @param priceRangeValue Ví dụ: "100000-200000"
      */
-    private void validateIndex(int index, int size) {
-        if (index < 0 || index >= size) {
-            throw new IndexOutOfBoundsException(
-                    "Index " + index + " không hợp lệ với danh sách có " + size + " phần tử.");
+    public ProductListPage filterByPrice(String priceRangeValue) {
+        System.out.println("[ProductListPage] Filtering by price range: " + priceRangeValue);
+        boolean found = false;
+        for (WebElement radio : radioFilterPrice) {
+            if (priceRangeValue.equalsIgnoreCase(radio.getAttribute("value"))) {
+                ((JavascriptExecutor) driver).executeScript("arguments[0].click();", radio);
+                found = true;
+                break;
+            }
         }
+        if (!found) throw new IllegalArgumentException("Không tìm thấy price range: " + priceRangeValue);
+        waitForProductsToLoad();
+        return this;
+    }
+
+    /**
+     * PROD-SRT-01/02: Chọn option sắp xếp trong [filter-sort] dropdown.
+     * @param visibleText Ví dụ: "Giá tăng dần", "Hàng mới nhất"
+     */
+    public ProductListPage sortBy(String visibleText) {
+        System.out.println("[ProductListPage] Sorting by: " + visibleText);
+        wait.until(ExpectedConditions.elementToBeClickable(selFilterSort));
+        new Select(selFilterSort).selectByVisibleText(visibleText);
+        waitForProductsToLoad();
+        return this;
+    }
+
+    public String getSelectedSortOption() {
+        wait.until(ExpectedConditions.visibilityOf(selFilterSort));
+        return new Select(selFilterSort).getFirstSelectedOption().getText().trim();
+    }
+
+    public List<WebElement> getDisplayedBooks() {
+        wait.until(ExpectedConditions.visibilityOfElementLocated(BOOK_ITEM_LOCATOR));
+        return driver.findElements(BOOK_ITEM_LOCATOR);
+    }
+
+    public int getBookCount() {
+        try { return getDisplayedBooks().size(); } catch (Exception e) { return 0; }
+    }
+
+    public String getBookNameAt(int index) {
+        List<WebElement> books = getDisplayedBooks();
+        return books.get(index).findElement(BOOK_NAME_IN_CARD).getText().trim();
+    }
+
+    public String getBookPriceAt(int index) {
+        List<WebElement> books = getDisplayedBooks();
+        return books.get(index).findElement(BOOK_PRICE_IN_CARD).getText().trim();
+    }
+
+    /**
+     * Lấy giá dạng số (long) từ chuỗi "120.000đ".
+     */
+    public long getBookPriceAsLong(int index) {
+        String raw = getBookPriceAt(index).replaceAll("[^0-9]", "");
+        return raw.isEmpty() ? 0L : Long.parseLong(raw);
+    }
+
+    public boolean isNoResultMessageDisplayed() {
+        try {
+            return wait.until(ExpectedConditions.visibilityOf(noResultMessage)).isDisplayed();
+        } catch (Exception e) { return false; }
+    }
+
+    public boolean isProductContainerDisplayed() {
+        try {
+            return wait.until(ExpectedConditions.visibilityOf(productContainer)).isDisplayed();
+        } catch (Exception e) { return false; }
+    }
+
+    /**
+     * PROD-NAV-03 / PROD-FIL-02/03: Kiểm tra trang không crash (không có Error 500).
+     */
+    public boolean isPageSafe() {
+        String title = driver.getTitle().toLowerCase();
+        String url   = driver.getCurrentUrl().toLowerCase();
+        return !title.contains("500") && !title.contains("error") && !url.contains("error/500");
+    }
+
+    public boolean is404Page() {
+        String title = driver.getTitle().toLowerCase();
+        return title.contains("404") || title.contains("not found");
+    }
+
+    /**
+     * Click vào card sách ở vị trí index → ProductDetailPage.
+     */
+    public ProductDetailPage clickBookAt(int index) {
+        List<WebElement> books = getDisplayedBooks();
+        ((JavascriptExecutor) driver).executeScript("arguments[0].click();", books.get(index));
+        return PageFactoryManager.getProductDetailPage(driver,baseUrl);
+    }
+
+    public int getPaginationCount() {
+        try {
+            wait.until(ExpectedConditions.visibilityOf(paginationWrapper));
+            return driver.findElements(PAGINATION_ITEMS).size();
+        } catch (Exception e) { return 0; }
+    }
+
+    public ProductListPage goToNextPage() {
+        WebElement btn = wait.until(ExpectedConditions.elementToBeClickable(NEXT_PAGE_BTN));
+        btn.click();
+        waitForProductsToLoad();
+        return this;
+    }
+
+    // --- Internal ---
+    private void waitForProductsToLoad() {
+        try {
+            Thread.sleep(800); // Chờ AJAX
+            wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("product-container")));
+        } catch (Exception ignored) {}
     }
 }

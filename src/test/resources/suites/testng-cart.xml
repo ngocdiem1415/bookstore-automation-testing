@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
+<!--
+    Suite: Cart Module (CART-ADD, CART-UPD, CART-DEL)
+    Chạy độc lập: mvn test -Dsurefire.suiteXmlFiles=testng-cart.xml
+    Lưu ý: CART-ADD-01 cần phải PASS trước khi chạy CART-UPD, CART-DEL
+-->
+<suite name="Cart Suite" verbose="1">
+    <parameter name="appURL" value="http://localhost:8080" />
+    <listeners>
+        <listener class-name="com.bookstore.listeners.TestListener" />
+    </listeners>
+
+    <!-- ADD TO CART -->
+    <test name="Cart - Add">
+        <classes>
+            <class name="com.bookstore.tests.cart.CartAddTest" />
+        </classes>
+    </test>
+
+    <!-- UPDATE CART -->
+    <test name="Cart - Update Quantity">
+        <classes>
+            <class name="com.bookstore.tests.cart.CartUpdateTest" />
+        </classes>
+    </test>
+
+    <!-- DELETE CART -->
+    <test name="Cart - Delete Items">
+        <classes>
+            <class name="com.bookstore.tests.cart.CartDeleteTest" />
+        </classes>
+    </test>
+
+</suite>

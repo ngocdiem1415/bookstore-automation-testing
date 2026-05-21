@@ -36,8 +36,8 @@ public class HomePage extends BasePage {
 
     private By bookTitleLink = By.cssSelector(".price-most-product h5 a");
 
-    public HomePage(WebDriver driver) {
-        super(driver);
+    public HomePage(WebDriver driver,String baseUrl) {
+        super(driver, baseUrl);
     }
 
     public boolean isBannerDisplayed() {
