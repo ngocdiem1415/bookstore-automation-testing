@@ -37,6 +37,7 @@ public class BasePage {
 
     protected void clearAndSendText(WebElement element, String text) {
         WebElement el = wait.until(ExpectedConditions.visibilityOf(element));
+        el.click();
         el.clear();
         el.sendKeys(text);
     }
@@ -78,11 +79,6 @@ public class BasePage {
         return driver.getTitle();
     }
 
-    /**
-     * Chụp screenshot và lưu vào thư mục test-output/screenshots/.
-     * @param testName Tên test case (dùng làm tên file).
-     * @return Đường dẫn file screenshot.
-     */
     public String takeScreenshot(String testName) {
         if (!(driver instanceof TakesScreenshot)) return "";
         try {
