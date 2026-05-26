@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
+<suite name="Product Suite" verbose="1">
+    <parameter name="appURL" value="http://localhost:8080" />
+    <listeners>
+        <listener class-name="com.bookstore.listeners.TestListener" />
+    </listeners>
+
+    <test name="Product - Navigate">
+        <classes>
+            <class name="com.bookstore.tests.product.ProductNavigateTest" />
+        </classes>
+    </test>
+
+    <test name="Product - Filter">
+        <classes>
+            <class name="com.bookstore.tests.product.ProductFilterTest" />
+        </classes>
+    </test>
+
+    <test name="Product - Sort">
+        <classes>
+            <class name="com.bookstore.tests.product.ProductSortTest" />
+        </classes>
+    </test>
+
+    <test name="Product - Detail">
+        <classes>
+            <class name="com.bookstore.tests.product.ProductDetailTest" />
+        </classes>
+    </test>
+
+</suite>

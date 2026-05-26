@@ -1,18 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
-<suite name="Bookstore Suite">
-    <parameter name="appURL" value="http://localhost:8080" />
-    <listeners>
-        <listener class-name="com.bookstore.listeners.TestListener" />
-    </listeners>
-    <test name="Automation Tests">
-        <classes>
-            <class name="com.bookstore.tests.HomeTest" />
-        </classes>
-    </test>
-    <test name="Authentication Tests">
-        <classes>
-            <class name="com.bookstore.tests.AuthTest" />
-        </classes>
-    </test>
+<suite name="Bookstore Automation Suite — All Modules" verbose="1">
+    <suite-files>
+        <suite-file path="src/test/resources/suites/testng-auth.xml"/>
+<!--        <suite-file path="src/main/resources/suites/testng-product.xml"    />-->
+    </suite-files>
+
 </suite>

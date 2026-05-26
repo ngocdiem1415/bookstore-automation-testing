@@ -13,7 +13,7 @@ public class HomePage extends BasePage {
     private final String PAGE_URL = "/home";
 
     public void open() {
-        driver.get(BaseSetup.baseUrl + PAGE_URL);
+        driver.get(getCurrentUrl() + PAGE_URL);
     }
 
     @FindBy(id = "carouselExampleIndicators")
@@ -36,8 +36,8 @@ public class HomePage extends BasePage {
 
     private By bookTitleLink = By.cssSelector(".price-most-product h5 a");
 
-    public HomePage(WebDriver driver) {
-        super(driver);
+    public HomePage(WebDriver driver,String baseUrl) {
+        super(driver, baseUrl);
     }
 
     public boolean isBannerDisplayed() {

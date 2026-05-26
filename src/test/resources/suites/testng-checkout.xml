@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
+<!--
+    Suite: Checkout Module (CHECKOUT-INFO, CHECKOUT-COD, CHK-VNP)
+    Chạy độc lập: mvn test -Dsurefire.suiteXmlFiles=testng-checkout.xml
+    Precondition: Server đang chạy tại localhost:8080, VNPay sandbox credentials hợp lệ.
+-->
+<suite name="Checkout Suite" verbose="1">
+    <parameter name="appURL" value="http://localhost:8080" />
+    <listeners>
+        <listener class-name="com.bookstore.listeners.TestListener" />
+    </listeners>
+
+    <!-- SHIPPING INFO -->
+    <test name="Checkout - Shipping Information">
+        <classes>
+            <class name="com.bookstore.tests.checkout.CheckoutInfoTest" />
+        </classes>
+    </test>
+
+    <!-- COD PAYMENT -->
+    <test name="Checkout - COD Payment">
+        <classes>
+            <class name="com.bookstore.tests.checkout.CheckoutCodTest" />
+        </classes>
+    </test>
+
+    <!-- VNPAY PAYMENT -->
+    <test name="Checkout - VNPay Payment">
+        <classes>
+            <class name="com.bookstore.tests.checkout.CheckoutVnpayTest" />
+        </classes>
+    </test>
+
+</suite>
