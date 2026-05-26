@@ -2,80 +2,75 @@ package com.bookstore.tests.cart;
 
 import com.bookstore.base.BaseSetup;
 import com.bookstore.factory.PageFactoryManager;
-import com.bookstore.pages.CartPage;
-import com.bookstore.pages.LoginPage;
-import com.bookstore.pages.ProductDetailPage;
-import com.bookstore.pages.ProductListPage;
+import com.bookstore.pages.*;
+import com.bookstore.pages.components.HeaderComponent;
+import com.bookstore.utils.DataHelper;
+import com.bookstore.utils.JsonDataProvider;
 import org.testng.Assert;
 import org.testng.annotations.Test;
+
+import java.util.Map;
 
 /**
  * Test Class: Cart - Add to Cart (CART-ADD)
  * Precondition: AUTH-LOG-01 (CUSTOMER logged in)
  */
 public class CartAddTest extends BaseSetup {
-    private static final String USERNAME = "diem_tester";
-    private static final String PASSWORD = "Abc@12345";
 
     private void loginAsCustomer() {
         LoginPage loginPage = PageFactoryManager.getLoginPage(driver, baseUrl);
-        loginPage.loginAsCustomer(USERNAME, PASSWORD);
+        loginPage.open();
+        loginPage.loginAsCustomer(
+                DataHelper.getValue("existing.username"),
+                DataHelper.getValue("existing.password")
+        );
     }
 
-    @Test(description = "CART-ADD-01: Verify user can add an in-stock product to cart.")
+    @Test(priority = 1, description = "CART-ADD-01: Verify user can add an in-stock product to cart.")
     public void CART_ADD_01_AddInStockProduct() {
         loginAsCustomer();
-
-        ProductListPage listPage = PageFactoryManager.getProductListPage(driver,baseUrl);
+        ProductListPage listPage = PageFactoryManager.getProductListPage(driver, baseUrl);
+        listPage.open();
+        Assert.assertTrue(listPage.getBookCount() > 0, "[FAIL] Không tìm thấy quyển sách nào hiển thị trên UI!");
         ProductDetailPage detailPage = listPage.clickBookAt(0);
-
-        System.out.println("[Assert] Verify product is in-stock");
         int stock = detailPage.getStockQuantity();
-        System.out.println("[Info] Stock: " + stock);
-        Assert.assertTrue(stock > 0, "Product should be in-stock for this test.");
-
-        System.out.println("[Step 2] Click [detail-add-cart-btn]");
+        Assert.assertTrue(stock > 0, "[FAIL] Quyển sách được chọn phải còn hàng (Stock > 0).");
         detailPage.clickAddToCart();
-
-        System.out.println("[Assert] Verify success alert message");
-        String msg = detailPage.getCartSuccessMessage();
-        System.out.println("[Assert] Alert: " + msg);
-        Assert.assertTrue(msg.contains("thêm vào giỏ hàng") || !msg.isEmpty(),
-                "Expected cart success message. Got: " + msg);
-
-        System.out.println("[Assert] Verify item appears in /cart");
-        CartPage cartPage = PageFactoryManager.getCartPage(driver,baseUrl);
-        Assert.assertTrue(cartPage.getCartItemCount() > 0,
-                "Expected at least 1 item in cart after adding.");
+        String alertText = detailPage.getSuccessMessage();
+        Assert.assertTrue(
+                alertText.contains("Sản phẩm đã được thêm vào giỏ hàng!"),
+                "[FAIL] Không xuất hiện thông báo thêm vào giỏ hàng thành công! Actual: " + alertText);
     }
 
-    @Test(description = "CART-ADD-02: Verify user cannot add an out-of-stock product.")
-    public void CART_ADD_02_OutOfStockButtonDisabled() {
+    @Test(
+            priority = 2,
+            dataProvider = "GlobalJsonFeeder",
+            dataProviderClass = JsonDataProvider.class,
+            description = "CART-ADD-02: Verify user cannot add an out-of-stock product."
+    )
+    public void CART_ADD_02_OutOfStockButtonDisabled(Map<String, String> data) {
         loginAsCustomer();
-        // Cần thay ID = ID sản phẩm hết hàng thực tế trong DB
-        ProductDetailPage detailPage = PageFactoryManager.getProductDetailPage(driver,baseUrl).openById("OUT_OF_STOCK_ID");
-
-        System.out.println("[Step 2] Observe [detail-add-cart-btn]");
+        String outOfStockId = data.get("out_of_stock_id");
+        ProductDetailPage detailPage = PageFactoryManager.getProductDetailPage(driver, baseUrl);
+        detailPage.navigateTo(baseUrl + "/books/" + outOfStockId);
         boolean isDisabled = detailPage.isAddToCartButtonDisabled();
-        System.out.println("[Assert] Add-to-cart button disabled: " + isDisabled);
-
-        Assert.assertTrue(isDisabled,
-                "Expected [detail-add-cart-btn] to be disabled for out-of-stock product.");
+        Assert.assertTrue(isDisabled, "[FAIL] Nút 'Thêm vào giỏ hàng' phải bị khóa cứng khi sản phẩm đã hết hàng!");
     }
 
-    @Test(description = "CART-ADD-03: Verify adding quantity exceeding stock (Boundary).")
+    @Test(priority = 3, description = "CART-ADD-03: Verify adding quantity exceeding stock (Boundary).")
     public void CART_ADD_03_ExceedStockQuantityBoundary() {
         loginAsCustomer();
-        ProductListPage listPage = PageFactoryManager.getProductListPage(driver,baseUrl);
+        ProductListPage listPage = PageFactoryManager.getProductListPage(driver, baseUrl);
+        listPage.open();
+        Assert.assertTrue(listPage.getBookCount() > 0, "[FAIL] Không tìm thấy quyển sách nào hiển thị trên UI!");
         ProductDetailPage detailPage = listPage.clickBookAt(0);
-
         int stock = detailPage.getStockQuantity();
-        int attemptQty = stock + 5; // > stock
-        detailPage.forceSetQuantity(attemptQty);
-        detailPage.clickAddToCart();
-        int actualQty  = detailPage.getCurrentQuantityValue();
-        int maxAllowed = detailPage.getQuantityMaxValue();
-        Assert.assertTrue(actualQty <= stock || maxAllowed == stock,
-                "Expected quantity capped at stock=" + stock + ". Actual qty=" + actualQty);
+        int attemptQty = stock + 5;
+        int actualQtyInInput = detailPage.getCurrentQuantityValue();
+        Assert.assertEquals(actualQtyInInput, stock,
+                "[FAIL] Hệ thống không tự động điều chỉnh giá trị ô nhập liệu về ngưỡng Stock tối đa!"
+                        + "\n  Số lượng kho (Stock)       : " + stock
+                        + "\n  Số lượng cố tình nhập      : " + attemptQty
+                        + "\n  Số lượng thực tế trong ô ô Input: " + actualQtyInInput);
     }
 }

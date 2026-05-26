@@ -11,21 +11,18 @@
         <listener class-name="com.bookstore.listeners.TestListener" />
     </listeners>
 
-    <!-- ADD TO CART -->
     <test name="Cart - Add">
         <classes>
             <class name="com.bookstore.tests.cart.CartAddTest" />
         </classes>
     </test>
 
-    <!-- UPDATE CART -->
     <test name="Cart - Update Quantity">
         <classes>
             <class name="com.bookstore.tests.cart.CartUpdateTest" />
         </classes>
     </test>
 
-    <!-- DELETE CART -->
     <test name="Cart - Delete Items">
         <classes>
             <class name="com.bookstore.tests.cart.CartDeleteTest" />

@@ -6,28 +6,24 @@
         <listener class-name="com.bookstore.listeners.TestListener" />
     </listeners>
 
-<!--    &lt;!&ndash; NAVIGATE &ndash;&gt;-->
-<!--    <test name="Product - Navigate">-->
-<!--        <classes>-->
-<!--            <class name="com.bookstore.tests.product.ProductNavigateTest" />-->
-<!--        </classes>-->
-<!--    </test>-->
+    <test name="Product - Navigate">
+        <classes>
+            <class name="com.bookstore.tests.product.ProductNavigateTest" />
+        </classes>
+    </test>
 
-<!--    &lt;!&ndash; FILTER &ndash;&gt;-->
-<!--    <test name="Product - Filter">-->
-<!--        <classes>-->
-<!--            <class name="com.bookstore.tests.product.ProductFilterTest" />-->
-<!--        </classes>-->
-<!--    </test>-->
+    <test name="Product - Filter">
+        <classes>
+            <class name="com.bookstore.tests.product.ProductFilterTest" />
+        </classes>
+    </test>
 
-<!--    &lt;!&ndash; SORT &ndash;&gt;-->
-<!--    <test name="Product - Sort">-->
-<!--        <classes>-->
-<!--            <class name="com.bookstore.tests.product.ProductSortTest" />-->
-<!--        </classes>-->
-<!--    </test>-->
+    <test name="Product - Sort">
+        <classes>
+            <class name="com.bookstore.tests.product.ProductSortTest" />
+        </classes>
+    </test>
 
-    <!-- DETAIL -->
     <test name="Product - Detail">
         <classes>
             <class name="com.bookstore.tests.product.ProductDetailTest" />

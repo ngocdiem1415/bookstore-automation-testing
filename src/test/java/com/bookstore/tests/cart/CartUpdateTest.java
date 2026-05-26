@@ -6,6 +6,7 @@ import com.bookstore.pages.CartPage;
 import com.bookstore.pages.LoginPage;
 import com.bookstore.pages.ProductDetailPage;
 import com.bookstore.pages.ProductListPage;
+import com.bookstore.utils.DataHelper;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -15,29 +16,43 @@ import org.testng.annotations.Test;
  */
 public class CartUpdateTest extends BaseSetup {
 
-    private static final String USERNAME = "diem_tester";
-    private static final String PASSWORD = "Abc@12345";
-
-    /** Login và thêm 1 sản phẩm vào giỏ */
     private CartPage loginAndAddOneItemToCart() {
-        PageFactoryManager.getLoginPage(driver,baseUrl).loginAsCustomer(USERNAME, PASSWORD);
-        ProductDetailPage detailPage = PageFactoryManager.getProductListPage(driver,baseUrl).clickBookAt(0);
+        LoginPage loginPage = PageFactoryManager.getLoginPage(driver, baseUrl);
+        loginPage.open();
+        loginPage.loginAsCustomer(
+                DataHelper.getValue("existing.username"),
+                DataHelper.getValue("existing.password")
+        );
+        CartPage cartPage = PageFactoryManager.getCartPage(driver, baseUrl);
+        cartPage.open();
+
+        ProductListPage listPage = PageFactoryManager.getProductListPage(driver, baseUrl);
+        listPage.open();
+
+        // Kiểm tra bảo hiểm bảo vệ luồng test không bị sập nếu API lọc sách bị trống
+        Assert.assertTrue(listPage.getBookCount() > 0,
+                "[ERROR] Không tìm thấy bất kỳ sản phẩm nào hiển thị trên UI danh sách!");
+        ProductDetailPage detailPage = listPage.clickBookAt(0);
+
+        int stock = detailPage.getStockQuantity();
+        Assert.assertTrue(stock > 0,
+                "[ERROR] Sản phẩm mẫu được chọn ngẫu nhiên đang ở trạng thái hết hàng (Stock = 0)!");
+
         detailPage.clickAddToCart();
-        return PageFactoryManager.getCartPage(driver,baseUrl);
+        return PageFactoryManager.getCartPage(driver, baseUrl);
     }
 
     @Test(description = "CART-UPD-01: Verify changing item quantity in Cart Page.")
     public void CART_UPD_01_IncreaseQuantity() {
         CartPage cartPage = loginAndAddOneItemToCart();
+        cartPage.open();
         int qtyBefore = cartPage.getQuantityAt(0);
+        System.out.println(qtyBefore);
         long totalBefore = cartPage.getTotalPriceAsLong();
-
+        System.out.println(totalBefore);
         cartPage.clickIncreaseAt(0);
-
         int qtyAfter   = cartPage.getQuantityAt(0);
         long totalAfter = cartPage.getTotalPriceAsLong();
-        System.out.println("[Assert] qty after=" + qtyAfter + " | total after=" + totalAfter);
-
         Assert.assertEquals(qtyAfter, qtyBefore + 1,
                 "Expected quantity to increase by 1. Before=" + qtyBefore + " After=" + qtyAfter);
         Assert.assertTrue(totalAfter >= totalBefore,
@@ -61,7 +76,10 @@ public class CartUpdateTest extends BaseSetup {
 
     @Test(description = "CART-UPD-03: Verify updating quantity via concurrent API calls (Boundary - Race Condition).")
     public void CART_UPD_03_ConcurrentUpdateRaceCondition() throws InterruptedException {
-        PageFactoryManager.getLoginPage(driver,baseUrl).loginAsCustomer(USERNAME,PASSWORD);
+        PageFactoryManager.getLoginPage(driver,baseUrl).loginAsCustomer(
+                DataHelper.getValue("existing.username"),
+                DataHelper.getValue("existing.password")
+        );
 
         // Lấy product ID và stock từ detail page
         ProductDetailPage detailPage = PageFactoryManager.getProductListPage(driver,baseUrl).clickBookAt(0);
