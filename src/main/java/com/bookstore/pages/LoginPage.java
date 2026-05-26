@@ -81,13 +81,11 @@ public class LoginPage extends BasePage{
     }
 
     public SignupPage clickLinkToSignup() {
-        System.out.println("[LoginPage] Clicking link to Signup page...");
         clickElement(lnkToSignup);
         return new SignupPage(driver, baseUrl);
     }
 
     public ForgotPasswordPage clickLinkToForgotPassword() {
-        System.out.println("[LoginPage] Clicking link to Forgot Password page...");
         clickElement(lnkToForgotPassword);
         return new ForgotPasswordPage(driver, baseUrl);
     }

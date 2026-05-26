@@ -2,85 +2,72 @@ package com.bookstore.pages.components;
 
 import com.bookstore.pages.BasePage;
 import com.bookstore.pages.HomePage;
+import com.bookstore.pages.ProfilePage;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
+import org.openqa.selenium.interactions.Actions;
 import org.openqa.selenium.support.FindBy;
-import org.openqa.selenium.support.PageFactory;
 import org.openqa.selenium.support.ui.ExpectedConditions;
-import org.openqa.selenium.support.ui.WebDriverWait;
 
-import java.time.Duration;
-
-import static com.bookstore.pages.BasePage.EXPLICIT_WAIT_SECONDS;
-
-/**
- * Component: Header (thanh điều hướng trên cùng).
- * Covers: AUTH-OUT-01
- */
 public class HeaderComponent extends BasePage {
 
-    @FindBy(css = "[data-testid='header-search-input']")
+    @FindBy(css = "[data-testid='search-input']")
     private WebElement txtSearchInput;
 
-    @FindBy(css = "[data-testid='header-search-btn']")
+    @FindBy(css = "[data-testid='search-btn']")
     private WebElement btnSearch;
 
-    @FindBy(css = "[data-testid='header-cart-icon']")
-    private WebElement lnkCartIcon;
+    @FindBy(css = "[data-testid='username-menu']")
+    private WebElement lblUsernameMenu;
 
-    @FindBy(css = "[data-testid='header-user-menu']")
-    private WebElement lnkUserMenu;
+    // 2. Định vị nút Hồ sơ bên trong Menu thả xuống
+    @FindBy(css = "[data-testid='nav-profile']")
+    private WebElement lnkProfile;
 
-    @FindBy(css = "[data-testid='header-logout-btn']")
+    // 3. Định vị nút Đăng xuất bên trong Menu thả xuống
+    @FindBy(css = "[data-testid='nav-logout']")
     private WebElement lnkLogout;
-
-    @FindBy(css = "[data-testid='header-login-btn']")
-    private WebElement lnkLogin;
-
-    @FindBy(css = "[data-testid='header-signup-btn']")
-    private WebElement lnkSignup;
 
     public HeaderComponent(WebDriver driver, String baseUrl) {
         super(driver, baseUrl);
     }
 
-    public HeaderComponent enterSearchKeyword(String keyword) {
-        wait.until(ExpectedConditions.visibilityOf(txtSearchInput)).clear();
-        txtSearchInput.sendKeys(keyword);
+    public HeaderComponent hoverUserMenu() {
+        wait.until(ExpectedConditions.visibilityOf(lblUsernameMenu));
+        Actions actions = new Actions(driver);
+        actions.moveToElement(lblUsernameMenu).perform();
         return this;
     }
 
-    public void clickSearch() {
-        wait.until(ExpectedConditions.elementToBeClickable(btnSearch)).click();
+    /**
+     * Luồng điều hướng đến trang cá nhân (AUTH-PRO-01)
+     */
+    public ProfilePage navigateToProfile() {
+        hoverUserMenu();
+        wait.until(ExpectedConditions.visibilityOf(lnkProfile));
+        wait.until(ExpectedConditions.elementToBeClickable(lnkProfile)).click();
+        return new ProfilePage(driver, baseUrl);
     }
 
-    public HeaderComponent clickUserMenu() {
-        wait.until(ExpectedConditions.elementToBeClickable(lnkUserMenu)).click();
-        return this;
-    }
-
+    /**
+     * Luồng xử lý bấm Đăng xuất (AUTH-OUT-01)
+     */
     public HomePage clickLogout() {
-        try {
-            clickUserMenu();
-        } catch (Exception e) {
-        }
-        wait.until(ExpectedConditions.elementToBeClickable(lnkLogout)).click();
-        return new HomePage(driver,baseUrl);
-    }
+        // Bước 1: Di chuột vào menu cha
+        hoverUserMenu();
 
+        // Bước 2: Đợi liên kết xuất hiện và click đăng xuất
+        System.out.println("[Header] Đợi và click chọn nút [Đăng xuất]...");
+        wait.until(ExpectedConditions.visibilityOf(lnkLogout));
+        wait.until(ExpectedConditions.elementToBeClickable(lnkLogout)).click();
+
+        return new HomePage(driver, baseUrl);
+    }
 
     public HomePage navigateToLogout() {
         driver.get(baseUrl + "/logout");
         return new HomePage(driver, baseUrl);
     }
-
-//    public boolean isLoginButtonVisible() {
-//        try {
-//            return wait.until(ExpectedConditions.visibilityOf(lnkLogin)).isDisplayed();
-//        } catch (Exception e) {
-//            return false;
-//        }
-//    }
 
     public boolean isLogoutButtonVisible() {
         try {
@@ -89,13 +76,4 @@ public class HeaderComponent extends BasePage {
             return false;
         }
     }
-
-    public boolean isUserMenuVisible() {
-        try {
-            return wait.until(ExpectedConditions.visibilityOf(lnkUserMenu)).isDisplayed();
-        } catch (Exception e) {
-            return false;
-        }
-    }
 }
-

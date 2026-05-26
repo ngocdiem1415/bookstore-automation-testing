@@ -1,6 +1,4 @@
 package com.bookstore.pages;
-
-import com.bookstore.base.BaseSetup;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.Keys;
 import org.openqa.selenium.WebDriver;
@@ -163,10 +161,8 @@ public class SignupPage extends BasePage {
     public void enterVerifyCode(String code) {
         WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
         WebElement input = wait.until(ExpectedConditions.elementToBeClickable(txtVerifyCode));
-
         input.clear();
         input.click();
-
         input.sendKeys(code);
     }
 
@@ -184,8 +180,4 @@ public class SignupPage extends BasePage {
                 .executeScript("return arguments[0].validationMessage;", txtRegisterPassword);
     }
 
-    public boolean isPasswordMessageCorrect(String expectedMessage) {
-        String actualMessage = getPasswordValidationMessage();
-        return actualMessage != null && actualMessage.contains(expectedMessage);
-    }
 }
