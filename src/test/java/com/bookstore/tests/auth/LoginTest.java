@@ -24,7 +24,11 @@ public class LoginTest extends BaseSetup {
                 DataHelper.getValue("existing.username"),
                 DataHelper.getValue("existing.password")
         );
-
+        try {
+            Thread.sleep(2000);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
         boolean redirectedToHome = homePage.getCurrentUrl().contains("/home")
                 || homePage.getCurrentUrl().equals(baseUrl + "/")
                 || homePage.getCurrentUrl().equals(baseUrl + "/home");

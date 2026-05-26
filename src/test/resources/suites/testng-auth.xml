@@ -1,31 +1,34 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
 <suite name="Debug Login Suite" verbose="1">
+    <listeners>
+        <listener class-name="com.bookstore.listeners.TestListener" />
+    </listeners>
 
-<!--    <test name="Auth - Register">-->
-<!--        <classes>-->
-<!--            <class name="com.bookstore.tests.auth.RegisterTest">-->
-<!--                <methods>-->
-<!--                    <include name="AUTH_REG_01_RegistrationAndVerifySuccess"/>-->
-<!--                    <include name="AUTH_REG_02_RegistrationFailExistingUser"/>-->
-<!--                    <include name="AUTH_REG_03_RegistrationFailInvalidPassword"/>-->
-<!--                </methods>-->
-<!--            </class>-->
-<!--        </classes>-->
-<!--    </test>-->
+    <test name="Auth - Register">
+        <classes>
+            <class name="com.bookstore.tests.auth.RegisterTest">
+                <methods>
+                    <include name="AUTH_REG_01_RegistrationAndVerifySuccess"/>
+                    <include name="AUTH_REG_02_RegistrationFailExistingUser"/>
+                    <include name="AUTH_REG_03_RegistrationFailInvalidPassword"/>
+                </methods>
+            </class>
+        </classes>
+    </test>
 
-<!--    <test name="Auth - Login">-->
-<!--        <classes>-->
-<!--            <class name="com.bookstore.tests.auth.LoginTest">-->
-<!--                <methods>-->
-<!--                    <include name="AUTH_LOG_01_LoginSuccessCustomer"/>-->
-<!--                    <include name="AUTH_LOG_02_LoginSuccessAdmin"/>-->
-<!--                    <include name="AUTH_LOG_03_LoginFailInvalidPassword"/>-->
-<!--                    <include name="AUTH_LOG_04_LoginFailSQLInjection"/>-->
-<!--                </methods>-->
-<!--            </class>-->
-<!--        </classes>-->
-<!--    </test>-->
+    <test name="Auth - Login">
+        <classes>
+            <class name="com.bookstore.tests.auth.LoginTest">
+                <methods>
+                    <include name="AUTH_LOG_01_LoginSuccessCustomer"/>
+                    <include name="AUTH_LOG_02_LoginSuccessAdmin"/>
+                    <include name="AUTH_LOG_03_LoginFailInvalidPassword"/>
+                    <include name="AUTH_LOG_04_LoginFailSQLInjection"/>
+                </methods>
+            </class>
+        </classes>
+    </test>
 
     <!-- LOGOUT -->
     <test name="Auth - Logout">
@@ -63,17 +66,17 @@
 <!--            </classes>-->
 <!--        </test>-->
 
-<!--        &lt;!&ndash; PROFILE &ndash;&gt;-->
-<!--        <test name="Auth - Profile">-->
-<!--            <classes>-->
-<!--                <class name="com.bookstore.tests.auth.ProfileTest">-->
-<!--                    <methods>-->
-<!--                        <include name="AUTH_PRO_01_UpdateProfileSuccess"/>-->
-<!--                        <include name="AUTH_PRO_02_UpdateProfileBlankUsername"/>-->
-<!--                        <include name="AUTH_PRO_03_UploadAvatarExceedsSizeLimit"/>-->
-<!--                    </methods>-->
-<!--                </class>-->
-<!--            </classes>-->
-<!--        </test>-->
+        <!-- PROFILE -->
+        <test name="Auth - Profile">
+            <classes>
+                <class name="com.bookstore.tests.auth.ProfileTest">
+                    <methods>
+                        <include name="AUTH_PRO_01_UpdateProfileSuccess"/>
+                        <include name="AUTH_PRO_02_UpdateProfileBlankUsername"/>
+                        <include name="AUTH_PRO_03_UploadAvatarExceedsSizeLimit"/>
+                    </methods>
+                </class>
+            </classes>
+        </test>
 
 </suite>

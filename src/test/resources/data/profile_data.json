@@ -4,11 +4,11 @@
     "test_phone": "0999888777",
     "test_birthdate": "2000-01-01",
     "test_gender": "female",
-    "expected_alert": "Upload thành công"
+    "expected_alert": "Cập nhật hồ sơ thành công!"
   },
   {
     "type": "AUTH_PRO_03",
-    "file_path": "\\src\\test\\resources\\testdata\\10MB.png",
-    "expected_error": "Upload thất bại"
+    "file_path": "\\src\\test\\resources\\data\\10MB.png",
+    "expected_error": "Ảnh phải nhỏ hơn 3MB"
   }
 ]
