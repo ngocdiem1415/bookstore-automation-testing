@@ -1,74 +1,153 @@
 package com.bookstore.tests.admin;
 
-import com.bookstore.base.BaseSetup;
 import com.bookstore.factory.PageFactoryManager;
 import com.bookstore.pages.*;
+import com.bookstore.utils.LoggerHelper;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-/**
- * ADM-ORD-01/02/03
- */
-public class AdminOrderTest extends BaseSetup {
-    private static final String ADMIN = "admin", PASS = "Abc@12345";
 
-    private AdminOrderPage loginAndOpen() {
-        LoginPage loginPage = PageFactoryManager.getLoginPage(driver, baseUrl);
-        loginPage.loginAsAdmin(ADMIN, PASS);
-        return PageFactoryManager.getAdminOrderPage(driver,baseUrl);
-    }
-
-    @Test(description = "ADM-ORD-01: Admin updates order status Pending → Shipped.")
-    public void ADM_ORD_01_UpdateStatusForward() {
-        AdminOrderPage page = loginAndOpen();
-        page.changeStatusAt(0, "SHIPPED");
-        String result = page.clickSaveAndGetResult(0);
-        System.out.println("[Assert] Result: " + result);
-
+public class AdminOrderTest extends AdminBaseTest {
+    private void prepareShippingOrder(AdminOrderPage page) {
+        LoggerHelper.info("[ADMIN][ORDER] Chuẩn bị đơn hàng trạng thái Shipping");
         page.open();
-        String statusAfter = page.getStatusAt(0);
-        System.out.println("[Assert] Status after: " + statusAfter);
-        Assert.assertTrue(statusAfter.contains("SHIPPED") || statusAfter.contains("Đang giao")
-                        || !result.isEmpty(),
-                "Expected status to be SHIPPED. Got: " + statusAfter);
+        int index = page.searchByStatus("Pending");
+        Assert.assertTrue(
+                index >= 0,
+                "Không tìm thấy đơn hàng trạng thái Pending để setup."
+        );
+
+        LoggerHelper.info(
+                "[ADMIN][ORDER] Tìm thấy đơn Pending tại index: " + index);
+        page.clickEditAt(index);
+        AdminOrderEditPage editPage =
+                PageFactoryManager.getAdminOrderEditPage(getDriver(), baseUrl);
+
+        editPage.selectOrderStatus("Shipping");
+        String notification = editPage.clickSaveAndGetNotification();
+        LoggerHelper.info(
+                "[ADMIN][ORDER] Notification sau khi chuyển Pending -> Shipping: "
+                        + notification);
     }
 
-    @Test(description = "ADM-ORD-02: Admin updates status backward Completed → Pending.")
+    @Test(
+            priority = 1,
+            description = "ADM-ORD-01: Admin hoàn tất đơn hàng đang vận chuyển."
+    )
+    public void ADM_ORD_01_CompleteShippingOrder() {
+        LoggerHelper.info(
+                "[ADMIN][ORDER] Bắt đầu kiểm thử Shipping -> Completed");
+        loginAsAdmin();
+        AdminOrderPage page =
+                PageFactoryManager.getAdminOrderPage(getDriver(), baseUrl);
+
+        // Setup dữ liệu
+        prepareShippingOrder(page);
+        page.open();
+
+        int index = page.searchByStatus("Shipping");
+        Assert.assertTrue(
+                index >= 0,
+                "Không tìm thấy đơn hàng trạng thái Shipping.");
+
+        LoggerHelper.info(
+                "[ADMIN][ORDER] Mở đơn Shipping tại index: " + index);
+        page.clickEditAt(index);
+        AdminOrderEditPage editPage =
+                PageFactoryManager.getAdminOrderEditPage(getDriver(), baseUrl);
+
+        LoggerHelper.info(
+                "[ADMIN][ORDER] Chuyển trạng thái Shipping -> Completed");
+        editPage.selectOrderStatus("Completed");
+        String notification = editPage.clickSaveAndGetNotification();
+
+        LoggerHelper.info(
+                "[ADMIN][ORDER] Notification: " + notification);
+        page.open();
+        int completedIndex = page.searchByStatus("Completed");
+
+        Assert.assertTrue(
+                completedIndex >= 0,
+                "Không tìm thấy đơn hàng Completed sau khi cập nhật.");
+        String orderStatus = page.getStatusAt(completedIndex);
+        Assert.assertTrue(
+                orderStatus.contains("Completed")
+                        || orderStatus.contains("Đã nhận")
+                        || notification.contains("thành công"),
+                "Order status chưa chuyển sang Completed. Hiện tại: "
+                        + orderStatus
+        );
+        LoggerHelper.info(
+                "[ADMIN][ORDER] Kết thúc kiểm thử: PASS");
+    }
+
+    @Test(
+            priority = 2,
+            description = "ADM-ORD-02: Kiểm thử quản trị viên không thể thay đổi trạng thái đơn hàng từ Completed → Pending."
+    )
     public void ADM_ORD_02_UpdateStatusBackward() {
-        AdminOrderPage page = loginAndOpen();
-        // Tìm order có status COMPLETED và kiểm tra dropdown
-        boolean dropdownDisabled = page.isStatusSelectDisabled(0);
-        if (dropdownDisabled) {
-            Assert.assertTrue(true, "UI correctly prevents backward status change.");
-        } else {
-            // Thử change backward và verify error
-            page.changeStatusAt(0, "PENDING");
-            String result = page.clickSaveAndGetResult(0);
-            String error = page.getErrorMessage();
-            System.out.println("[Assert] Result='" + result + "' | Error='" + error + "'");
-            boolean blocked = error.contains("Invalid") || error.contains("không hợp lệ")
-                    || !result.isEmpty();
-            Assert.assertTrue(blocked,
-                    "Expected error for backward status change. Got: result='" + result + "'");
-        }
+        LoggerHelper.info("[ADMIN][ORDER] Bắt đầu kiểm thử trạng thái Completed không thể chỉnh sửa");
+        loginAsAdmin();
+        AdminOrderPage page = PageFactoryManager.getAdminOrderPage(getDriver(), baseUrl);
+        LoggerHelper.info("[ADMIN][ORDER] Mở trang quản lý đơn hàng");
+        page.open();
+        int index = page.searchByStatus("Completed");
+        Assert.assertTrue(
+                index >= 0,
+                "Không tìm thấy đơn hàng Completed để kiểm thử."
+        );
+        LoggerHelper.info("[ADMIN][ORDER] Mở đơn hàng Completed tại index: " + index);
+        page.clickEditAt(index);
+        AdminOrderEditPage editPage =
+                PageFactoryManager.getAdminOrderEditPage(getDriver(), baseUrl);
+        boolean disabled = editPage.isOrderStatusSelectDisabled();
+        LoggerHelper.info("[ADMIN][ORDER] Dropdown trạng thái đơn hàng disabled: " + disabled);
+        Assert.assertTrue(
+                disabled,
+                "Dropdown trạng thái phải bị khóa khi đơn hàng đã Completed."
+        );
+        LoggerHelper.info("[ADMIN][ORDER] Kết thúc kiểm thử: PASS");
     }
 
-    @Test(description = "ADM-ORD-03: Admin cancelling VNPAY order (Boundary).")
-    public void ADM_ORD_03_CancelVnpayOrderBoundary() {
-        AdminOrderPage page = loginAndOpen();
-        // Tìm order có status PAID và thử set CANCELLED
-        try {
-            page.changeStatusAt(0, "CANCELLED");
-            String result = page.clickSaveAndGetResult(0);
-            System.out.println("[Assert] Alert for VNPAY cancel: " + result);
-            Assert.assertTrue(
-                    result.contains("hoàn tiền") || result.contains("VNPAY") || !result.isEmpty(),
-                    "Expected manual refund alert for VNPAY paid order. Got: " + result);
-        } catch (Exception e) {
-            System.out.println("[Info] CANCELLED option not in dropdown for PAID orders (expected): " + e.getMessage());
-            Assert.assertTrue(page.isStatusSelectDisabled(0) || true,
-                    "Expected UI to block cancel for VNPAY PAID order.");
-        }
+    @Test(
+            priority = 3,
+            description = "ADM-ORD-03: Quản trị viên hủy đơn hàng đang xử lý."
+    )
+    public void ADM_ORD_03_CancelPendingOrder() {
+        LoggerHelper.info("[ADMIN][ORDER] Bắt đầu kiểm thử Pending -> Cancelled");
+        loginAsAdmin();
+        AdminOrderPage page = PageFactoryManager.getAdminOrderPage(getDriver(), baseUrl);
+        page.open();
+        int index = page.searchByStatus("Pending");
 
+        Assert.assertTrue(
+                index >= 0,
+                "Không tìm thấy đơn hàng Pending để kiểm thử hủy đơn."
+        );
+        LoggerHelper.info("[ADMIN][ORDER] Mở đơn hàng Pending tại index: " + index);
+        page.clickEditAt(index);
+        AdminOrderEditPage editPage =
+                PageFactoryManager.getAdminOrderEditPage(getDriver(), baseUrl);
+        LoggerHelper.info("[ADMIN][ORDER] Chuyển trạng thái đơn hàng sang Cancelled");
+
+        editPage.selectOrderStatus("Cancelled");
+        String notification = editPage.clickSaveAndGetNotification();
+        LoggerHelper.info("[ADMIN][ORDER] Notification sau khi hủy đơn: " + notification);
+        page.open();
+
+        int cancelledIndex = page.searchByStatus("Cancelled");
+        Assert.assertTrue(
+                cancelledIndex >= 0,
+                "Không tìm thấy đơn hàng Cancelled sau khi cập nhật."
+        );
+        String orderStatus = page.getStatusAt(cancelledIndex);
+        Assert.assertTrue(
+                orderStatus.contains("Cancelled")
+                        || orderStatus.contains("Hủy")
+                        || notification.contains("thành công"),
+                "Order status chưa chuyển sang Cancelled. Hiện tại: " + orderStatus
+        );
+
+        LoggerHelper.info("[ADMIN][ORDER] Kết thúc kiểm thử: PASS");
     }
 }
