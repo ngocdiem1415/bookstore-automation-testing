@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="WARN">
+    <Properties>
+        <Property name="baseDir">${sys:user.dir}</Property>
+
+        <Property name="runId">
+            ${date:yyyy-MM-dd}
+        </Property>
+
+        <Property name="logFileName">
+            automation-test
+        </Property>
+    </Properties>
+
+    <Appenders>
+        <!-- Cấu hình ghi ra Console -->
+        <Console name="ConsoleAppender" target="SYSTEM_OUT">
+            <PatternLayout charset="UTF-8"
+                           pattern="%d{yyyy-MM-dd HH:mm:ss} %msg%n"/>
+        </Console>
+
+        <!-- Cấu hình ghi ra File (Tự động tạo file mới mỗi ngày hoặc khi file đầy) -->
+        <RollingFile name="FileAppender"
+                     fileName="${baseDir}/target/reports/${runId}/logs/${logFileName}.log"
+                     filePattern="${baseDir}/target/reports/${runId}/logs/${logFileName}-%d{yyyy-MM-dd}-%i.log.gz">
+
+            <PatternLayout charset="UTF-8"
+                           pattern="%d{yyyy-MM-dd HH:mm:ss} %msg%n"/>
+            <Policies>
+                <TimeBasedTriggeringPolicy interval="1" modulate="true"/>
+                <SizeBasedTriggeringPolicy size="10 MB"/>
+            </Policies>
+            <DefaultRolloverStrategy max="10"/>
+        </RollingFile>
+    </Appenders>
+
+    <Loggers>
+        <!-- Áp dụng cả 2 Appender vào hệ thống -->
+        <Root level="INFO">
+            <AppenderRef ref="ConsoleAppender"/>
+            <AppenderRef ref="FileAppender"/>
+        </Root>
+    </Loggers>
+</Configuration>

@@ -3,13 +3,16 @@ package com.bookstore.report;
 import com.aventstack.extentreports.ExtentReports;
 import com.aventstack.extentreports.reporter.ExtentSparkReporter;
 import com.aventstack.extentreports.reporter.configuration.Theme;
+import com.bookstore.constants.ReportPath;
 
 public class ExtentManager {
     private static ExtentReports extent;
 
     public static ExtentReports createInstance() {
         String fileName = "bookstore-automation-report.html";
-        ExtentSparkReporter htmlReporter = new ExtentSparkReporter("target/reports/" + fileName);
+        String reportPath = ReportPath.REPORT_DIR + "/ExtentReport.html";
+        ExtentSparkReporter htmlReporter =
+                new ExtentSparkReporter(reportPath);
 
         htmlReporter.config().setTheme(Theme.STANDARD);
         htmlReporter.config().setDocumentTitle("Bookstore Automation Report");
