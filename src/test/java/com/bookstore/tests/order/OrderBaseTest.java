@@ -1,91 +1,93 @@
-package com.bookstore.tests.cart;
+package com.bookstore.tests.order;
 
 import com.bookstore.base.BaseSetup;
 import com.bookstore.factory.PageFactoryManager;
-import com.bookstore.pages.CartPage;
-import com.bookstore.pages.LoginPage;
-import com.bookstore.pages.ProductDetailPage;
-import com.bookstore.pages.ProductListPage;
+import com.bookstore.pages.*;
 import com.bookstore.utils.DataHelper;
+import com.bookstore.utils.LoggerHelper;
+import org.openqa.selenium.JavascriptExecutor;
 import org.testng.Assert;
+import org.testng.annotations.DataProvider;
 
-public abstract class CartBaseTest extends BaseSetup {
+import java.util.Map;
+
+public abstract class OrderBaseTest extends BaseSetup {
     protected void loginAsCustomer() {
+        LoggerHelper.info("[ORDER][BASE] Mở trang đăng nhập");
         LoginPage loginPage = PageFactoryManager.getLoginPage(getDriver(), baseUrl);
         loginPage.open();
+
+        LoggerHelper.info("[ORDER][BASE] Đăng nhập bằng tài khoản CUSTOMER");
         loginPage.loginAsCustomer(
                 DataHelper.getValue("existing.username"),
                 DataHelper.getValue("existing.password")
         );
+
         try {
             Thread.sleep(500);
-            System.out.println("[CartBaseTest] Đăng nhập xong, đã nghỉ 500ms để ổn định Cookie.");
-        } catch (InterruptedException ignored) {}
+            LoggerHelper.info("[ORDER][BASE] Đăng nhập xong, chờ 500ms để ổn định cookie");
+        } catch (InterruptedException e) {
+            LoggerHelper.warn("[ORDER][BASE] Luồng chờ sau đăng nhập bị gián đoạn");
+            Thread.currentThread().interrupt();
+        }
     }
 
-    protected CartPage loginAndAddOneItemToCart() {
+    protected OrderHistoryPage loginAsCustomerAndOpenOrderHistoryPage() {
+        LoggerHelper.info("[ORDER][BASE] Chuẩn bị mở trang lịch sử đơn hàng bằng tài khoản CUSTOMER");
+        loginAsCustomer();
+
+        LoggerHelper.info("[ORDER][BASE] Mở trang lịch sử đơn hàng");
+        OrderHistoryPage ordPage = PageFactoryManager.getOrderHistoryPage(getDriver(), baseUrl);
+
+        return ordPage.open();
+    }
+
+    protected OrderHistoryPage loginAsCustomerNotOrderAndOpenOrderHistoryPage(String user, String pass) {
+        LoggerHelper.info("[ORDER][BASE] Mở trang đăng nhập");
+        LoginPage loginPage = PageFactoryManager.getLoginPage(getDriver(), baseUrl);
+        loginPage.open();
+
+        LoggerHelper.info("[ORDER][BASE] Đăng nhập bằng tài khoản kiểm thử không có đơn hàng: " + user);
+        loginPage.loginAsCustomer(user, pass);
+
+        try {
+            Thread.sleep(500);
+            LoggerHelper.info("[ORDER][BASE] Đăng nhập xong, chờ 500ms để ổn định cookie");
+        } catch (InterruptedException e) {
+            LoggerHelper.warn("[ORDER][BASE] Luồng chờ sau đăng nhập bị gián đoạn");
+            Thread.currentThread().interrupt();
+        }
+
+        LoggerHelper.info("[ORDER][BASE] Mở trang lịch sử đơn hàng");
+        OrderHistoryPage ordPage = PageFactoryManager.getOrderHistoryPage(getDriver(), baseUrl);
+
+        return ordPage.open();
+    }
+
+    protected CartPage loginAndCleanCart() {
         loginAsCustomer();
         CartPage cartPage = PageFactoryManager.getCartPage(getDriver(), baseUrl);
+        LoggerHelper.info("[ORDER][BASE] Mở trang giỏ hàng");
         cartPage.open();
         int countItemn = cartPage.getCartItemCount();
         if (countItemn > 0) {
-            System.out.println("[Helper] Giỏ hàng còn " + cartPage.getCartItemCount() + " item từ test trước → dọn sạch...");
+            LoggerHelper.info("[ORDER][BASE] Giỏ hàng còn " + cartPage.getCartItemCount() + " item từ test trước → dọn sạch...");
             cartPage.deleteAllItems();
-            System.out.println("[Helper] Giỏ hàng đã được làm sạch.");
+            LoggerHelper.info("[ORDER][BASE] Giỏ hàng đã được làm sạch.");
         }
 
         ProductListPage listPage = PageFactoryManager.getProductListPage(getDriver(), baseUrl);
+        LoggerHelper.info("[ORDER][BASE] Mở trang danh sách sản phẩm");
         listPage.open();
-        Assert.assertTrue(listPage.getBookCount() > 0,
+
+        int quantity = listPage.getBookCount();
+        LoggerHelper.info("[ORDER][BASE] Số lượng sách trong trang là: " + quantity);
+        Assert.assertTrue(quantity > 0,
                 "[ERROR] Precondition: Không tìm thấy sản phẩm nào trên trang danh sách!");
 
-        ProductDetailPage detailPage = listPage.clickBookAt(0);
-        int stock = detailPage.getStockQuantity();
-        Assert.assertTrue(stock > 0,
-                "[ERROR] Precondition: Sản phẩm được chọn đang hết hàng (Stock = 0)!");
-
-        detailPage.clickAddToCart();
+        LoggerHelper.info("[ORDER][BASE] Mở trang giỏ hàng");
         cartPage.open();
-        Assert.assertTrue(cartPage.getCartItemCount() > 0,
-                "[ERROR] Precondition: Giỏ hàng vẫn trống sau khi thêm sản phẩm!");
-        return cartPage;
-    }
-
-    protected CartPage loginAndAddItemsToCart(int itemCount) {
-        loginAsCustomer();
-
-        CartPage cartPage = PageFactoryManager.getCartPage(getDriver(), baseUrl);
-        cartPage.open();
-        if (cartPage.getCartItemCount() > 0) {
-            System.out.println("[Helper] Giỏ hàng còn " + cartPage.getCartItemCount()
-                    + " item từ test trước → dọn sạch qua [cart-item-delete]...");
-            cartPage.deleteAllItems();
-            System.out.println("[Helper] Giỏ hàng đã sạch: " + cartPage.isCartEmptyMessageDisplayed());
-        }
-
-        ProductListPage listPage = PageFactoryManager.getProductListPage(getDriver(), baseUrl);
-        listPage.open();
-        int availableBooks = listPage.getBookCount();
-        Assert.assertTrue(availableBooks > 0,
-                "[ERROR] Precondition: Không tìm thấy sản phẩm nào trên trang danh sách!");
-
-        for (int i = 0; i < itemCount; i++) {
-            ProductDetailPage detail = listPage.clickBookAt(i);
-            int stock = detail.getStockQuantity();
-            if (stock > 0) {
-                detail.clickAddToCart();
-                System.out.println("[Helper] Thêm sản phẩm [" + i + "] vào giỏ hàng thành công.");
-            } else {
-                System.out.println("[Helper] Bỏ qua sản phẩm [" + i + "] vì hết hàng.");
-            }
-            listPage.open();
-        }
-
-        // Bước 4: Mở giỏ hàng và xác nhận có hàng
-        cartPage.open();
-        Assert.assertTrue(cartPage.getCartItemCount() > 0,
-                "[ERROR] Precondition: Giỏ hàng vẫn trống sau khi thêm " + itemCount + " sản phẩm!");
-        return cartPage;
+        return cartPage.open();
     }
 
 }

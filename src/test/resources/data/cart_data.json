@@ -2,5 +2,9 @@
   {
     "type": "CART_ADD_02",
     "out_of_stock_id": "15"
+  },
+  {
+    "type": "CART_UPD_02",
+    "invalid_quantity": "-2"
   }
 ]

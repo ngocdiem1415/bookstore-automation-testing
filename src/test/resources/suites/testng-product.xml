@@ -6,27 +6,47 @@
         <listener class-name="com.bookstore.listeners.TestListener" />
     </listeners>
 
-    <test name="Product - Navigate">
+    <test name="Product - Detail">
         <classes>
-            <class name="com.bookstore.tests.product.ProductNavigateTest" />
+            <class name="com.bookstore.tests.product.ProductDetailTest" >
+                <methods>
+                    <include name="PROD_DET_01_ValidProductDetail"/>
+                    <include name="PROD_DET_02_HiddenProductReturns404"/>
+                    <include name="PROD_DET_03_SqlInjectionIdBoundary"/>
+                </methods>
+            </class>
         </classes>
     </test>
 
     <test name="Product - Filter">
         <classes>
-            <class name="com.bookstore.tests.product.ProductFilterTest" />
+            <class name="com.bookstore.tests.product.ProductFilterTest" >
+                <methods>
+                    <include name="PROD_FIL_01_FilterByValidPriceRange"/>
+                </methods>
+            </class>
         </classes>
     </test>
 
     <test name="Product - Sort">
         <classes>
-            <class name="com.bookstore.tests.product.ProductSortTest" />
+            <class name="com.bookstore.tests.product.ProductSortTest" >
+                <methods>
+                    <include name="PROD_FIL_01_SortByPriceAscending"/>
+                    <include name="PROD_FIL_02_SortByPriceDescending"/>
+                </methods>
+            </class>
         </classes>
     </test>
 
-    <test name="Product - Detail">
+    <test name="Product - Navigate">
         <classes>
-            <class name="com.bookstore.tests.product.ProductDetailTest" />
+            <class name="com.bookstore.tests.product.ProductNavigateTest" >
+                <methods>
+                    <include name="PROD_NAV_01_ValidCategoryShowsBooks"/>
+                    <include name="PROD_NAV_02_SwitchCategoryUpdatesProductList"/>
+                </methods>
+            </class>
         </classes>
     </test>
 

@@ -1,112 +1,130 @@
 package com.bookstore.tests.checkout;
 
-import com.bookstore.base.BaseSetup;
 import com.bookstore.factory.PageFactoryManager;
-import com.bookstore.pages.*;
+import com.bookstore.pages.CheckoutPage;
+import com.bookstore.pages.InvoicePage;
+import com.bookstore.utils.JsonDataProvider;
+import com.bookstore.utils.LoggerHelper;
+import org.openqa.selenium.Alert;
 import org.openqa.selenium.NoAlertPresentException;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+import java.util.Map;
+
 /**
- * Test Class: Checkout — Shipping Information (CHECKOUT-INFO)
- * Precondition: CART-ADD-01 (có sản phẩm trong giỏ hàng)
+ * Test Suite: Checkout Shipping Information (CHECKOUT-INFO)
+ * Kiểm thử điền thông tin giao hàng:
+ * - CHECKOUT-INFO-01: Điền thông tin giao hàng hợp lệ thành công.
+ * - CHECKOUT-INFO-02: Để trống trường bắt buộc (Ward) -> hệ thống chặn.
+ * - CHECKOUT-INFO-03: Kiểm thử bảo mật XSS trong địa chỉ giao hàng.
  */
-public class CheckoutInfoTest extends BaseSetup {
-    private static final String USERNAME = "diem_tester";
-    private static final String PASSWORD = "Abc@12345";
-    private static final String VALID_NAME     = "Nguyễn Thị Diễm";
-    private static final String VALID_PHONE    = "0987654321";
-    private static final String VALID_ADDRESS  = "123 Đường Lê Lợi";
-    private static final String VALID_CITY     = "Hồ Chí Minh";
-    private static final String VALID_DISTRICT = "Quận 1";
-    private static final String VALID_WARD     = "Phường Bến Nghé";
+public class CheckoutInfoTest extends CheckoutBaseTest {
 
+    @Test(
+            priority = 1,
+            dataProvider = "GlobalJsonFeeder",
+            dataProviderClass = JsonDataProvider.class,
+            description = "CHECKOUT-INFO-01: Kiểm thử điền thông tin giao hàng hợp lệ"
+    )
+    public void CHECKOUT_INFO_01_FillShippingInfoSuccess(Map<String, String> data) {
+        LoggerHelper.info("[CHECKOUT][INFO] Bắt đầu kiểm thử điền thông tin giao hàng hợp lệ");
 
-    /** Login + thêm sản phẩm vào giỏ + mở Checkout */
-    private CheckoutPage loginAddItemAndOpenCheckout() {
-        System.out.println("[Precondition] Login → Add item to cart → Open Checkout");
-        PageFactoryManager.getLoginPage(driver,baseUrl).loginAsCustomer(USERNAME, PASSWORD);
-        PageFactoryManager.getProductListPage(driver,baseUrl).clickBookAt(0).clickAddToCart();
-        return  PageFactoryManager.getCheckoutPage(driver,baseUrl);
-    }
-
-    @Test(description = "CHECKOUT-INFO-01: Verify filling shipping info successfully.")
-    public void CHECKOUT_INFO_01_FillShippingInfoSuccess() {
         CheckoutPage checkoutPage = loginAddItemAndOpenCheckout();
 
-        checkoutPage.fillShippingInfo(VALID_NAME, VALID_PHONE, VALID_ADDRESS,
-                VALID_CITY, VALID_DISTRICT, VALID_WARD);
+        LoggerHelper.info("[CHECKOUT][INFO] Điền họ tên: " + data.get("name"));
+        LoggerHelper.info("[CHECKOUT][INFO] Điền số điện thoại: " + data.get("phone"));
+        LoggerHelper.info("[CHECKOUT][INFO] Điền địa chỉ giao hàng");
+        LoggerHelper.info("[CHECKOUT][INFO] Chọn tỉnh/thành phố: " + data.get("city"));
+        LoggerHelper.info("[CHECKOUT][INFO] Chọn quận/huyện: " + data.get("district"));
+        LoggerHelper.info("[CHECKOUT][INFO] Chọn phường/xã: " + data.get("ward"));
 
+        checkoutPage.fillShippingInfo(
+                data.get("name"),
+                data.get("phone"),
+                data.get("address"),
+                data.get("city"),
+                data.get("district"),
+                data.get("ward")
+        );
+
+        LoggerHelper.info("[CHECKOUT][INFO] Click lưu thông tin giao hàng");
         String alertText = checkoutPage.clickSaveAndGetAlert();
 
-        Assert.assertTrue(
-                alertText.contains("thành công") || alertText.contains("Cập nhật"),
-                "Expected success alert 'Cập nhật địa chỉ và phí giao hàng thành công'. Got: " + alertText);
+        LoggerHelper.info("[CHECKOUT][INFO] Alert thực tế: " + alertText);
 
+        Assert.assertTrue(alertText.contains("Cập nhật địa chỉ và phí giao hàng thành công!"),
+                "[CheckoutPage] Kỳ vọng thông báo lưu thành công. Thực tế: " + alertText);
+
+        LoggerHelper.info("[CHECKOUT][INFO] Kiểm tra phí giao hàng hiển thị");
         Assert.assertTrue(checkoutPage.isShippingFeeDisplayed(),
-                "Expected shipping fee to be displayed after saving info.");
+                "[CheckoutPage] Phí giao hàng phải hiển thị sau khi lưu địa chỉ.");
 
+        LoggerHelper.info("[CHECKOUT][INFO] Kiểm tra nút đặt hàng được mở khóa");
         Assert.assertTrue(checkoutPage.isBuyButtonEnabled(),
-                "Expected [checkout-buy-btn] to become enabled after saving shipping info.");
+                "[CheckoutPage] Nút Đặt hàng phải được enabled sau khi lưu thành công.");
     }
 
-    @Test(description = "CHECKOUT-INFO-02: Verify validation on empty required fields.")
-    public void CHECKOUT_INFO_02_EmptyWardBlocked() {
+    @Test(
+            priority = 2,
+            dataProvider = "GlobalJsonFeeder",
+            dataProviderClass = JsonDataProvider.class,
+            description = "CHECKOUT-INFO-02: Kiểm thử điền thông tin giao hàng không hợp lệ"
+    )
+    public void CHECKOUT_INFO_02_EmptyWardBlocked(Map<String, String> data) {
+        LoggerHelper.info("[CHECKOUT][INFO] Bắt đầu kiểm thử validation khi bỏ trống phường/xã");
         CheckoutPage checkoutPage = loginAddItemAndOpenCheckout();
 
-        checkoutPage.enterName(VALID_NAME)
-                .enterPhone(VALID_PHONE)
-                .enterAddress(VALID_ADDRESS)
-                .selectCity(VALID_CITY)
-                .selectDistrict(VALID_DISTRICT);
-        // Không chọn ward → giữ trống
+        LoggerHelper.info("[CHECKOUT][INFO] Điền thông tin giao hàng nhưng không chọn phường/xã");
+        checkoutPage.enterName(data.get("name"))
+                .enterPhone(data.get("phone"))
+                .enterAddress(data.get("address"))
+                .selectCity(data.get("city"))
+                .selectDistrict(data.get("district"));
+        // Để trống Phường/Xã (Ward)
 
+        LoggerHelper.info("[CHECKOUT][INFO] Click lưu thông tin giao hàng");
         String alertText = checkoutPage.clickSaveAndGetAlert();
-        System.out.println("[Assert] Alert text: " + alertText);
 
+        LoggerHelper.info("[CHECKOUT][INFO] Alert thực tế: " + alertText);
         Assert.assertTrue(
-                alertText.contains("đầy đủ") || alertText.contains("Vui lòng"),
-                "Expected validation alert 'Vui lòng điền đầy đủ thông tin giao hàng'. Got: " + alertText);
+                alertText.contains("Vui lòng điền đầy đủ thông tin giao hàng."));
 
-        System.out.println("[Assert] Verify [checkout-buy-btn] remains disabled");
         Assert.assertFalse(checkoutPage.isBuyButtonEnabled(),
-                "Expected [checkout-buy-btn] to remain DISABLED when ward is empty.");
+                "Nút Đặt hàng phải bị khóa (disabled) khi thông tin giao hàng không hợp lệ.");
+        LoggerHelper.info("[CHECKOUT][INFO] Kiểm tra nút đặt hàng vẫn bị khóa");
     }
 
-    @Test(description = "CHECKOUT-INFO-03: Verify XSS injection in shipping address (Boundary).")
-    public void CHECKOUT_INFO_03_XssAddressBoundary() {
+    @Test(
+            priority = 3,
+            dataProvider = "GlobalJsonFeeder",
+            dataProviderClass = JsonDataProvider.class,
+            description = "CHECKOUT-INFO-03: Kiểm thử lỗ hổng XSS trong địa chỉ giao hàng (Boundary)."
+    )
+    public void CHECKOUT_INFO_03_XssAddressBoundary(Map<String, String> data) {
+        LoggerHelper.info("[CHECKOUT][INFO] Bắt đầu kiểm thử XSS trong địa chỉ giao hàng");
         CheckoutPage checkoutPage = loginAddItemAndOpenCheckout();
 
-        String xssPayload = "<script>alert('XSS')</script>";
-        System.out.println("[Step 2] Input XSS payload into [checkout-address]: " + xssPayload);
-        checkoutPage.fillShippingInfo(VALID_NAME, VALID_PHONE, xssPayload,
-                VALID_CITY, VALID_DISTRICT, VALID_WARD);
+        String xssPayload = data.get("address");
+        LoggerHelper.info("[CHECKOUT][INFO] Nhập payload XSS vào địa chỉ: " + xssPayload);
+        checkoutPage.fillShippingInfo(
+                data.get("name"),
+                data.get("phone"),
+                xssPayload,
+                data.get("city"),
+                data.get("district"),
+                data.get("ward")
+        );
 
-        System.out.println("[Step 3a] Click [checkout-save-btn]");
-        String saveAlert = checkoutPage.clickSaveAndGetAlert();
-        System.out.println("[Assert] Save alert: " + saveAlert);
+        LoggerHelper.info("[CHECKOUT][INFO] Click lưu thông tin giao hàng");
+        String alertText = checkoutPage.clickSaveAndGetAlert();
 
-        System.out.println("[Step 3b] Click [checkout-buy-btn]");
-        checkoutPage.selectPaymentMethod("Thanh toán khi nhận hàng (COD)");
-        InvoicePage invoicePage = checkoutPage.clickBuyExpectingSuccess();
+        LoggerHelper.info("[CHECKOUT][INFO] Alert thực tế: " + alertText);
+        Assert.assertTrue(
+                alertText.contains( "Địa chỉ không được chứa mã độc hoặc script!"));
 
-        System.out.println("[Assert] Verify order saved and page not crashed");
-        Assert.assertTrue(invoicePage.isInvoiceDisplayed(),
-                "Expected order to be saved. Invoice page not displayed.");
-
-        System.out.println("[Assert] Verify XSS payload NOT executed (no rogue alert from script)");
-        boolean xssExecuted = false;
-        try {
-            // Nếu XSS thực thi → sẽ có JS alert popup
-            org.openqa.selenium.Alert rogue = driver.switchTo().alert();
-            String rogueText = rogue.getText();
-            System.out.println("[SECURITY FAIL] Rogue alert detected: " + rogueText);
-            rogue.accept();
-            xssExecuted = true;
-        } catch (NoAlertPresentException e) {
-            System.out.println("[Assert] No rogue alert — XSS payload was escaped correctly.");
-        }
-        Assert.assertFalse(xssExecuted,
-                "SECURITY VULNERABILITY: XSS payload was executed! Address field not sanitized.");
+        Assert.assertFalse(checkoutPage.isBuyButtonEnabled(),
+                "Nút Đặt hàng phải bị khóa (disabled) khi thông tin giao hàng không hợp lệ.");
+        LoggerHelper.info("[CHECKOUT][INFO] Kiểm tra hệ thống từ chối địa chỉ chứa script");
     }
 }

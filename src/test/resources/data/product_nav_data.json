@@ -1,0 +1,11 @@
+[
+  {
+    "type": "PROD_NAV_01",
+    "category": "Tiểu thuyết"
+  },
+  {
+    "type": "PROD_NAV_02",
+    "first_category": "Tiểu thuyết",
+    "second_category": "Kinh tế"
+  }
+]

@@ -5,6 +5,7 @@ import com.bookstore.factory.PageFactoryManager;
 import com.bookstore.pages.SignupPage;
 import com.bookstore.utils.DataHelper;
 import com.bookstore.utils.JsonDataProvider;
+import com.bookstore.utils.LoggerHelper;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -34,8 +35,10 @@ public class RegisterTest extends BaseSetup {
         String randomPhone = generateRandomPhoneNumber();
 
         SignupPage signupPage = PageFactoryManager.getSignupPage(driver, baseUrl);
+        LoggerHelper.info("[AUTH][REGISTER] Mở trang đăng ký");
         signupPage.open();
 
+        LoggerHelper.info("[AUTH][REGISTER] Nhập thông tin đăng ký hợp lệ");
         signupPage.fillRegistrationForm(
                 randomUser,
                 "Abc12345",
@@ -44,14 +47,22 @@ public class RegisterTest extends BaseSetup {
                 "01/05/2002",
                 randomPhone
         );
+        LoggerHelper.info("[AUTH][REGISTER] Click nút đăng ký");
         signupPage.clickSubmitExpectingSuccess();
+        String alert = signupPage.getMessageAndAccept();
+        Assert.assertTrue(alert.contains("Đăng ký thành công! Vui lòng kiểm tra email để xác nhận tài khoản"),
+                "Lỗi: Hệ thống không hiển thị thông báo đăng kí thành công sau khi gửi thông tin hợp lệ!");
+        LoggerHelper.info("[AUTH][REGISTER] Thông báo đăng kí thành công");
 
+        LoggerHelper.info("[AUTH][REGISTER] Kiểm tra chuyển sang trang xác thực OTP");
         Assert.assertTrue(signupPage.isOnEmailVerifyPage(),
                 "Lỗi: Hệ thống không hiển thị trang xác thực OTP sau khi gửi thông tin hợp lệ!");
 
+        LoggerHelper.info("[AUTH][REGISTER] Nhập mã OTP");
         signupPage.enterVerifyCode(DataHelper.getValue("fixed.otp.code"));
         signupPage.clickVerify();
 
+        LoggerHelper.info("[AUTH][REGISTER] Kiểm tra đăng ký thành công");
         Assert.assertTrue(signupPage.isRedirectedToSuccess(),
                 "Lỗi: Không chuyển hướng về trang /success sau khi xác thực OTP thành công.");
     }
@@ -64,7 +75,10 @@ public class RegisterTest extends BaseSetup {
     )
     public void AUTH_REG_02_RegistrationFailExistingUser(Map<String, String> data) {
         SignupPage signupPage = PageFactoryManager.getSignupPage(driver, baseUrl);
+        LoggerHelper.info("[AUTH][REGISTER] Mở trang đăng ký");
         signupPage.open();
+
+        LoggerHelper.info("[AUTH][REGISTER] Nhập username/email đã tồn tại");
         signupPage.fillRegistrationForm(
                 data.get("username"),
                 data.get("password"),
@@ -73,11 +87,15 @@ public class RegisterTest extends BaseSetup {
                 "01/05/2002",
                 generateRandomPhoneNumber()
         );
-
+        LoggerHelper.info("[AUTH][REGISTER] Click nút đăng ký");
         signupPage.clickSubmitExpectingFailure();
+
+        LoggerHelper.info("[AUTH][REGISTER] Kiểm tra thông báo lỗi trùng dữ liệu");
         String errorMsg = signupPage.getErrorMessage();
-        Assert.assertTrue(errorMsg.contains(data.get("expected_error")),
+        Assert.assertTrue(errorMsg.contains("Username đã tồn tại"),
                 "Lỗi: Thông báo báo trùng dữ liệu hiển thị không đúng! Actual: " + errorMsg);
+
+        LoggerHelper.info("[AUTH][REGISTER] Kiểm tra người dùng vẫn ở trang đăng ký");
         Assert.assertTrue(signupPage.isOnSignupPage(),
                 "Lỗi: Hệ thống điều hướng sai, không giữ người dùng lại trang đăng ký.");
     }
@@ -90,7 +108,10 @@ public class RegisterTest extends BaseSetup {
     )
     public void AUTH_REG_03_RegistrationFailInvalidPassword(Map<String, String> data) {
         SignupPage signupPage = PageFactoryManager.getSignupPage(driver, baseUrl);
+        LoggerHelper.info("[AUTH][REGISTER] Mở trang đăng ký");
         signupPage.open();
+
+        LoggerHelper.info("[AUTH][REGISTER] Nhập thông tin lỗi");
         signupPage.fillRegistrationForm(
                 "user_loi_bien",
                 data.get("password"),
@@ -99,12 +120,14 @@ public class RegisterTest extends BaseSetup {
                 "01/05/2002",
                 generateRandomPhoneNumber()
         );
-        boolean isBtnDisabled = !signupPage.isSubmitButtonEnabled();
 
+        boolean isBtnDisabled = !signupPage.isSubmitButtonEnabled();
+        LoggerHelper.info("[AUTH][REGISTER] Kiểm tra nút Submat bị vô hiệu hóa");
         Assert.assertTrue(isBtnDisabled, "Lỗi: Nút Submit phải bị vô hiệu hóa khi mật khẩu sai định dạng!");
+
         String actualError = signupPage.getCheckPwdWarning();
         String expectedError = "Mật khẩu phải có ít nhất 6 ký tự, bao gồm cả chữ cái và số!";
+        LoggerHelper.info("[AUTH][REGISTER] Kiểm tra thông báo lỗi trùng dữ liệu");
         Assert.assertEquals(actualError, expectedError);
-
     }
 }

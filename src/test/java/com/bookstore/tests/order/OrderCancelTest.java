@@ -1,103 +1,173 @@
 package com.bookstore.tests.order;
 
-import com.bookstore.base.BaseSetup;
 import com.bookstore.factory.PageFactoryManager;
 import com.bookstore.pages.*;
+import com.bookstore.utils.JsonDataProvider;
+import com.bookstore.utils.LoggerHelper;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-/** ORD-CAN-01/02/03 */
-public class OrderCancelTest extends BaseSetup {
-    private static final String USER = "diem_tester", PASS = "Abc@12345";
+import java.util.Map;
 
-    @Test(description = "ORD-CAN-01: Verify cancelling a PENDING order.")
+public class OrderCancelTest extends OrderBaseTest {
+
+    @Test(
+            priority = 1,
+            description = "ORD-CAN-01: Hủy đơn hàng trạng thái chờ xử lý"
+    )
     public void ORD_CAN_01_CancelPendingOrder() {
-        PageFactoryManager.getLoginPage(driver,baseUrl).loginAsCustomer(USER, PASS);
-        OrderHistoryPage ordPage =  PageFactoryManager.getOrderHistoryPage(driver,baseUrl);
+        LoggerHelper.info("[ORDER][CANCEL] Bắt đầu kiểm thử hủy đơn hàng trạng thái chờ xử lý");
+
+        OrderHistoryPage ordPage = loginAsCustomerAndOpenOrderHistoryPage();
 
         try {
-            ordPage.filterByStatus("Chờ xử lý");
+            LoggerHelper.info("[ORDER][CANCEL] Lọc đơn hàng trạng thái Chờ thanh toán");
+            ordPage.filterByStatus("Chờ thanh toán");
         } catch (Exception e) {
-            System.out.println("[Info] Filter not available, proceeding without filter.");
+            LoggerHelper.warn("[ORDER][CANCEL] Không lọc được tab Chờ thanh toán, tiếp tục không lọc");
         }
 
         int cancelBtnsBefore = ordPage.getCancelButtonCount();
+        LoggerHelper.info("[ORDER][CANCEL] Số nút hủy trước khi hủy: " + cancelBtnsBefore);
+
         Assert.assertTrue(cancelBtnsBefore > 0,
-                "Precondition: Need at least 1 PENDING order with [order-cancel-btn].");
+                "Precondition: Cần ít nhất 1 đơn hàng ở trạng thái Pending để test hủy đơn!");
+
+        String statusBefore = ordPage.getOrderStatusAt(0);
+        LoggerHelper.info("[ORDER][CANCEL] Trạng thái đơn hàng trước khi hủy: " + statusBefore);
+
+        LoggerHelper.info("[ORDER][CANCEL] Click hủy đơn hàng đầu tiên");
         ordPage.clickCancelAt(0);
+
         String statusAfter = ordPage.getOrderStatusAt(0);
+        LoggerHelper.info("[ORDER][CANCEL] Trạng thái đơn hàng sau khi hủy: " + statusAfter);
+
         Assert.assertTrue(
-                statusAfter.contains("Đã hủy") || statusAfter.contains("CANCELLED"),
-                "Expected cancelled status. Got: " + statusAfter);
+                statusAfter.toLowerCase().contains("hủy") || statusAfter.toLowerCase().contains("cancel"),
+                "Trạng thái đơn hàng phải chuyển thành Đã hủy. Thực tế: " + statusAfter);
+
         int cancelBtnsAfter = ordPage.getCancelButtonCount();
+        LoggerHelper.info("[ORDER][CANCEL] Số nút hủy sau khi hủy: " + cancelBtnsAfter);
+
         Assert.assertTrue(cancelBtnsAfter < cancelBtnsBefore,
-                "Expected cancel button to disappear after cancellation.");
+                "Nút Hủy đơn hàng của đơn này phải biến mất sau khi hủy thành công.");
     }
 
-    @Test(description = "ORD-CAN-02: Verify cannot cancel a SHIPPED order.")
+    @Test(
+            priority = 2,
+            description = "ORD-CAN-02: Kiểm tra không thể hủy đơn hàng đang giao hoặc đã hoàn thành"
+    )
     public void ORD_CAN_02_CannotCancelShippedOrder() {
-        PageFactoryManager.getLoginPage(driver,baseUrl).loginAsCustomer(USER, PASS);
+        LoggerHelper.info("[ORDER][CANCEL] Kiểm thử hông cho phép hủy đơn hàng đang giao hoặc đã hoàn thành...");
+        OrderHistoryPage ordPage = loginAsCustomerAndOpenOrderHistoryPage();
 
-        System.out.println("[Step 1] Navigate to Order History");
-        OrderHistoryPage ordPage =  PageFactoryManager.getOrderHistoryPage(driver,baseUrl);
-
-        System.out.println("[Step 2] Filter Status = 'Đang giao' (Shipped)");
+        // Thử lọc theo tab Hoàn thành
         try {
-            ordPage.filterByStatus("Đang giao");
+            ordPage.filterByStatus("Hoàn thành");
         } catch (Exception e) {
-            System.out.println("[Info] Filter not available.");
+            LoggerHelper.error("[ORDER][CANCEL] Không lọc được tab Hoàn thành.");
         }
 
-        int shippedOrderCount = ordPage.getOrderCount();
-        System.out.println("[Assert] Shipped orders found: " + shippedOrderCount);
+        int completedOrderCount = ordPage.getOrderCount();
+        LoggerHelper.info("[ORDER][CANCEL] Tìm thấy " + completedOrderCount + " đơn hàng hoàn thành.");
 
-        if (shippedOrderCount > 0) {
-            System.out.println("[Assert] Verify NO [order-cancel-btn] on SHIPPED orders");
-            Assert.assertEquals(ordPage.getCancelButtonCount(), 0,
-                    "Expected NO cancel buttons for SHIPPED orders. Got: "
-                            + ordPage.getCancelButtonCount());
+        if (completedOrderCount > 0) {
+            int cancelBtnsCount = ordPage.getCancelButtonCount();
+            LoggerHelper.info("[ORDER][CANCEL] Số nút hủy đơn hàng hiển thị: " + cancelBtnsCount);
+            Assert.assertEquals(cancelBtnsCount, 0,
+                    "Không được xuất hiện nút Hủy đơn hàng đối với các đơn hàng đã Hoàn thành!");
         } else {
-            System.out.println("[Info] No SHIPPED orders available to test. Marking as acceptable.");
+            LoggerHelper.warn("[ORDER][CANCEL] Không có đơn hàng hoàn thành nào trên tài khoản này để test. Bỏ qua kiểm tra nút hủy.");
         }
     }
 
-//    @Test(description = "ORD-CAN-03: Verify stock is restored upon cancellation (Boundary).")
-//    public void ORD_CAN_03_StockRestoredOnCancel() throws InterruptedException {
-//        PageFactoryManager.getLoginPage(driver,baseUrl).loginAsCustomer(USER, PASS);
-//
-//        System.out.println("[Step 1] Get stock before — check via Product Detail page");
-//        ProductListPage listPage =  PageFactoryManager.getProductListPage(driver,baseUrl);
-//        ProductDetailPage detailPage = listPage.clickBookAt(0);
-//        int stockBefore = detailPage.getStockQuantity();
-//        String productUrl = detailPage.getCurrentUrl();
-//        System.out.println("[Info] Product: " + productUrl + " | Stock before: " + stockBefore);
-//
-//        System.out.println("[Step 1] Create order with 2 books");
-//        detailPage.forceSetQuantity(2);
-//        detailPage.clickAddToCart();
-//
-//        CheckoutPage cp = new CheckoutPage(driver).open();
-//        cp.fillShippingInfo("Test User", "0900000000", "123 Test St",
-//                "Hồ Chí Minh", "Quận 1", "Phường Bến Nghé");
-//        cp.clickSaveAndGetAlert();
-//        cp.selectPaymentMethod("Thanh toán khi nhận hàng (COD)");
-//        cp.clickBuyExpectingSuccess();
-//
-//        System.out.println("[Step 2] Cancel the order using [order-cancel-btn]");
-//        OrderHistoryPage ordPage = new OrderHistoryPage(driver).open();
-//        Assert.assertTrue(ordPage.getCancelButtonCount() > 0, "Need cancel button for new order.");
-//        ordPage.clickCancelAt(0);
-//        Thread.sleep(1500);
-//
-//        System.out.println("[Step 3] Check stock restored via API");
-//        driver.get(productUrl);
-//        detailPage = new ProductDetailPage(driver);
-//        int stockAfter = detailPage.getStockQuantity();
-//        System.out.println("[Assert] Stock before=" + stockBefore + " | Stock after=" + stockAfter);
-//
-//        Assert.assertTrue(stockAfter >= stockBefore,
-//                "Expected stock to be restored to >= " + stockBefore + " after cancel. Got: " + stockAfter);
-//
-//        endTimer("ORD-CAN-03", t);
-//    }
+    @Test(
+            priority = 3,
+            dataProvider = "GlobalJsonFeeder",
+            dataProviderClass = JsonDataProvider.class,
+            description = "ORD-CAN-03: Kiểm tra khôi phục tồn kho sau khi hủy đơn"
+    )
+    public void ORD_CAN_03_StockRestoredOnCancel(Map<String, String> data) throws InterruptedException {
+        LoggerHelper.info("[ORDER][CANCEL] Bắt đầu kiểm thử khôi phục tồn kho sau khi hủy đơn");
+        LoggerHelper.info("[ORDER][CANCEL] Dọn giỏ hàng trước khi tạo đơn");
+        int quantityToOrder = Integer.parseInt(data.get("quantity"));
+        CartPage cartPage = loginAndCleanCart();
+
+        ProductListPage listPage = PageFactoryManager.getProductListPage(getDriver(), baseUrl);
+        LoggerHelper.info("[ORDER][CANCEL] Mở danh sách sản phẩm");
+        listPage.open();
+
+        int availableBooks = listPage.getBookCount();
+        Assert.assertTrue(availableBooks > 0,
+                "[ERROR] Precondition: Không tìm thấy sản phẩm nào trên trang danh sách!");
+        ProductDetailPage detailPage = listPage.clickBookAt(0);
+        int stockBefore = detailPage.getStockQuantity();
+        LoggerHelper.info("[ORDER][CANCEL] Stock trước khi đặt hàng: " + stockBefore);
+
+        LoggerHelper.info("[ORDER][CANCEL] Số lượng đặt hàng: " + quantityToOrder);
+        detailPage.forceSetQuantity(quantityToOrder);
+
+        LoggerHelper.info("[ORDER][CANCEL] Thêm sản phẩm vào giỏ hàng");
+        detailPage.clickAddToCart();
+        cartPage.open();
+        Assert.assertTrue(cartPage.getCartItemCount() > 0,
+                "[ERROR] Precondition: Giỏ hàng vẫn trống sau khi thêm sản phẩm!");
+        cartPage.checkCheckboxAt(0);
+
+        //checkout
+        CheckoutPage checkoutPage = cartPage.clickBuyButton();
+        LoggerHelper.info("[ORDER][CANCEL] Điền thông tin checkout");
+        checkoutPage.fillShippingInfo(
+                data.get("name"),
+                data.get("phone"),
+                data.get("address"),
+                data.get("city"),
+                data.get("district"),
+                data.get("ward")
+        );
+        checkoutPage.clickSaveAndGetAlert();
+
+        LoggerHelper.info("[ORDER][CANCEL] Đặt hàng thành công, mở invoice");
+        InvoicePage invoice = checkoutPage.clickBuyExpectingSuccess();
+        invoice.open();
+        Assert.assertTrue(invoice.isOnInvoicePage(),
+                "Kỳ vọng chuyển đến trang hóa đơn /invoice. Thực tế: " + invoice.getCurrentUrl());
+
+        LoggerHelper.info("[ORDER][CANCEL] Quay lại trang danh sách và chi tiết sản phẩm để kiểm tra trừ kho");
+        listPage.open();
+        detailPage = listPage.clickBookAt(0);
+        int stockAfterOrder = detailPage.getStockQuantity();
+        int expectedStockAfterOrder = stockBefore - quantityToOrder;
+
+        LoggerHelper.info("[ORDER][CANCEL] Tồn kho trước: " + stockBefore + " | Tồn kho sau khi đặt hàng (chưa hủy): " + stockAfterOrder);
+        Assert.assertEquals(stockAfterOrder, expectedStockAfterOrder,
+                "[FAIL] Hệ thống không trừ bớt số lượng sản phẩm trong kho sau khi đặt hàng thành công!"
+                        + "\n  Trước khi mua : " + stockBefore
+                        + "\n  Số lượng mua  : " + quantityToOrder
+                        + "\n  Kỳ vọng còn lại: " + expectedStockAfterOrder
+                        + "\n  Thực tế còn lại: " + stockAfterOrder);
+
+        // cancelled
+        LoggerHelper.info("[ORDER][CANCEL] Mở lịch sử đơn hàng để hủy đơn vừa đặt");
+        OrderHistoryPage ordPage = PageFactoryManager.getOrderHistoryPage(getDriver(), baseUrl);
+        ordPage.open();
+        Assert.assertTrue(ordPage.getCancelButtonCount() > 0, "Đơn hàng vừa đặt phải có nút hủy!");
+        LoggerHelper.info("[ORDER][CANCEL] Click hủy đơn hàng vừa đặt");
+        ordPage.clickCancelAt(0);
+
+        LoggerHelper.info("[ORDER][CANCEL] Mở lại trang lịch sử đơn hàng sau khi hủy để đồng bộ UI");
+        ordPage.open();
+
+        LoggerHelper.info("[ORDER][CANCEL] Mở chi tiết đơn hàng đã hủy để kiểm tra sản phẩm");
+        ordPage.clickDetailAt(0);
+        detailPage = ordPage.clickProductInOrderDetail();
+
+        int stockAfter = detailPage.getStockQuantity();
+        LoggerHelper.info("[ORDER][CANCEL] Tồn kho trước: " + stockBefore + " | Tồn kho sau khi hủy: " + stockAfter);
+        Assert.assertEquals(stockAfter, stockBefore,
+                "[FAIL] Số lượng tồn kho không được khôi phục chính xác về trạng thái ban đầu!"
+                        + "\n  Trước khi mua : " + stockBefore
+                        + "\n  Sau khi hủy   : " + stockAfter);
+        LoggerHelper.info("[ORDER][CANCEL] Stock sau khi hủy: " + stockAfter);
+    }
 }

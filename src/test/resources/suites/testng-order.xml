@@ -1,35 +1,62 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
-<!--
-    Suite: Checkout Module (CHECKOUT-INFO, CHECKOUT-COD, CHK-VNP)
-    Chạy độc lập: mvn test -Dsurefire.suiteXmlFiles=testng-checkout.xml
-    Precondition: Server đang chạy tại localhost:8080, VNPay sandbox credentials hợp lệ.
--->
-<suite name="Checkout Suite" verbose="1">
+
+<suite name="Order Module Suite" verbose="1">
     <parameter name="appURL" value="http://localhost:8080" />
     <listeners>
         <listener class-name="com.bookstore.listeners.TestListener" />
     </listeners>
 
-    <!-- SHIPPING INFO -->
-    <test name="Checkout - Shipping Information">
+    <!-- ORDER LISTING -->
+    <test name="Order - History List">
         <classes>
-            <class name="com.bookstore.tests.checkout.CheckoutInfoTest" />
+            <class name="com.bookstore.tests.order.OrderListTest">
+                <methods>
+                    <include name="ORD_LST_01_ViewOrderHistory"/>
+                    <include name="ORD_LST_02_NewUserEmptyOrderHistory"/>
+                    <include name="ORD_LST_03_SearchOrderByProductName"/>
+                </methods>
+            </class>
         </classes>
     </test>
 
-    <!-- COD PAYMENT -->
-    <test name="Checkout - COD Payment">
+    <!-- ORDER DETAIL -->
+    <test name="Order - Details View">
         <classes>
-            <class name="com.bookstore.tests.checkout.CheckoutCodTest" />
+            <class name="com.bookstore.tests.order.OrderDetailTest">
+                <methods>
+                    <include name="ORD_DET_01_ViewOrderDetail"/>
+                    <include name="ORD_DET_02_InvalidOrderId"/>
+                    <include name="ORD_DET_03_IdorBoundary"/>
+                </methods>
+            </class>
         </classes>
     </test>
 
-    <!-- VNPAY PAYMENT -->
-    <test name="Checkout - VNPay Payment">
+    <!-- ORDER CANCELLATION -->
+    <test name="Order - Cancellation">
         <classes>
-            <class name="com.bookstore.tests.checkout.CheckoutVnpayTest" />
+            <class name="com.bookstore.tests.order.OrderCancelTest">
+                <methods>
+                    <include name="ORD_CAN_01_CancelPendingOrder"/>
+                    <include name="ORD_CAN_02_CannotCancelShippedOrder"/>
+                    <include name="ORD_CAN_03_StockRestoredOnCancel"/>
+                </methods>
+            </class>
         </classes>
     </test>
+
+<!--    &lt;!&ndash; PRODUCT REVIEW &ndash;&gt;-->
+<!--    <test name="Order - Product Reviews">-->
+<!--        <classes>-->
+<!--            <class name="com.bookstore.tests.order.OrderReviewTest">-->
+<!--                <methods>-->
+<!--                    <include name="ORD_REV_01_SubmitProductReview"/>-->
+<!--                    <include name="ORD_REV_02_CannotReviewUncompletedOrder"/>-->
+<!--                    <include name="ORD_REV_03_EmptyCommentReviewBoundary"/>-->
+<!--                </methods>-->
+<!--            </class>-->
+<!--        </classes>-->
+<!--    </test>-->
 
 </suite>

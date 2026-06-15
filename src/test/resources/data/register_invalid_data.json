@@ -3,15 +3,12 @@
     "type": "AUTH_REG_02",
     "username": "diem",
     "password": "Password123",
-    "email": "ngocdiem31072004@gmail.com",
-    "expected_error": "Username đã tồn tại"
+    "email": "ngocdiem31072004@gmail.com"
   },
   {
     "type": "AUTH_REG_03",
-    "username": "user_loi_bien",
+    "username": "user",
     "password": "abc@",
-    "email": "invalid_pwd@gmail.com",
-    "expected_error": "Mật khẩu phải có ít nhất 6 ký tự..."
+    "email": "invalid_pwd@gmail.com"
   }
-
 ]
