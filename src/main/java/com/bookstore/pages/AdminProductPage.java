@@ -1,150 +1,203 @@
 package com.bookstore.pages;
 
-import com.bookstore.base.BaseSetup;
+import com.bookstore.factory.PageFactoryManager;
+import com.bookstore.utils.LoggerHelper;
 import org.openqa.selenium.*;
 import org.openqa.selenium.support.FindBy;
 import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.WebDriverWait;
 
+import java.time.Duration;
 import java.util.List;
 
-/**
- * Page Object: Admin - Quản lý Sản phẩm (/admin/products).
- * Covers: ADM-PRO-01/02/03, ADM-PRE-01/02/03, ADM-PRD-01/02/03
- */
 public class AdminProductPage extends BasePage {
 
     private static final String PAGE_URL = "/admin/products";
 
-    // --- List ---
-    @FindBy(css = "[data-testid='admin-product-list'] tr")
+    @FindBy(css = "[data-testid='admin-product-table'] tbody tr")
     private List<WebElement> tableRows;
 
-    @FindBy(css = "[data-testid='admin-add-btn']")
+    @FindBy(css = "[data-testid='admin-add-product-btn']")
     private WebElement btnAdd;
 
-    @FindBy(css = "[data-testid='admin-edit-btn']")
+    @FindBy(css = "[data-testid^='admin-edit-product-']")
     private List<WebElement> listEditBtns;
 
-    @FindBy(css = "[data-testid='admin-delete-btn']")
+    @FindBy(css = "[data-testid^='admin-delete-product-']")
     private List<WebElement> listDeleteBtns;
 
-    // --- Form fields ---
-    @FindBy(css = "[data-testid='admin-prod-title']")
-    private WebElement txtTitle;
+    @FindBy(css = "[data-testid='admin-product-name']")
+    private List<WebElement> productNames;
 
-    @FindBy(css = "[data-testid='admin-prod-price']")
-    private WebElement txtPrice;
+    @FindBy(css = "[data-testid='admin-product-id']")
+    private List<WebElement> productIds;
 
-    @FindBy(css = "[data-testid='admin-prod-thumbnail']")
-    private WebElement inputThumbnail;
+    @FindBy(css = "[data-testid='admin-product-category']")
+    private List<WebElement> productCategories;
 
-    @FindBy(css = "[data-testid='admin-prod-description']")
-    private WebElement txtDescription;
+    @FindBy(css = "[data-testid='admin-product-author']")
+    private List<WebElement> productAuthors;
 
-    @FindBy(css = "[data-testid='admin-save-btn']")
-    private WebElement btnSave;
+    @FindBy(css = "[data-testid='admin-product-year']")
+    private List<WebElement> productYears;
 
-    // --- Messages ---
-    @FindBy(css = "[data-testid='admin-prod-error']")
-    private WebElement lblError;
+    @FindBy(css = "[data-testid='admin-product-qty']")
+    private List<WebElement> productQuantities;
 
-    @FindBy(css = "[data-testid='admin-prod-success']")
-    private WebElement lblSuccess;
+    @FindBy(css = "[data-testid='admin-product-price']")
+    private List<WebElement> productPrices;
 
-    public AdminProductPage(WebDriver driver,String baseUrl) {
+    @FindBy(css = "[data-testid='admin-product-promo']")
+    private List<WebElement> productPromotions;
+
+    @FindBy(css = "[data-testid='admin-product-updated']")
+    private List<WebElement> productUpdatedDates;
+
+    @FindBy(id = "confirm-modal")
+    private WebElement confirmModal;
+
+    @FindBy(id = "confirm-delete")
+    private WebElement btnConfirmDelete;
+
+    @FindBy(id = "cancel-delete")
+    private WebElement btnCancelDelete;
+
+    @FindBy(id = "notification")
+    private WebElement notification;
+
+    public AdminProductPage(WebDriver driver, String baseUrl) {
         super(driver, baseUrl);
     }
+
     public AdminProductPage open() {
-        System.out.println("[AdminProductPage] Navigating to: " + getCurrentUrl() + PAGE_URL);
-        driver.get(getCurrentUrl() + PAGE_URL);
+        LoggerHelper.info("[ADMIN][PRODUCT_PAGE] Mở trang quản lý sản phẩm");
+        driver.get(baseUrl + PAGE_URL);
+        waitForLoadPage();
         return this;
     }
 
-    // --- List actions ---
+    private void waitForLoadPage() {
+        try {
+            WebDriverWait shortWait = new WebDriverWait(driver, Duration.ofSeconds(10));
+            shortWait.until(ExpectedConditions.visibilityOfAllElements(tableRows));
+        } catch (Exception ignored) {
+        }
+    }
+
     public int getProductCount() {
-        try { return Math.max(0, tableRows.size() - 1); } catch (Exception e) { return 0; }
+        LoggerHelper.info("[ADMIN][PRODUCT_PAGE] Đếm số sản phẩm trong bảng");
+
+        try {
+            int count = productIds.size();
+            LoggerHelper.info("[ADMIN][PRODUCT_PAGE] Số sản phẩm hiện tại: " + count);
+            return count;
+        } catch (Exception e) {
+            LoggerHelper.warn("[ADMIN][PRODUCT_PAGE] Không đếm được sản phẩm: " + e.getMessage());
+            return 0;
+        }
     }
 
     public String getFirstProductTitle() {
+        LoggerHelper.info("[ADMIN][PRODUCT_PAGE] Lấy tên sản phẩm đầu tiên");
+
         try {
-            return tableRows.get(1)
-                    .findElement(By.cssSelector("[data-testid='admin-prod-name']"))
-                    .getText().trim();
-        } catch (Exception e) { return ""; }
+            String title = getTextOf(productNames.get(0));
+            LoggerHelper.info("[ADMIN][PRODUCT_PAGE] Tên sản phẩm đầu tiên: " + title);
+            return title;
+        } catch (Exception e) {
+            LoggerHelper.warn("[ADMIN][PRODUCT_PAGE] Không lấy được tên sản phẩm đầu tiên: " + e.getMessage());
+            return "";
+        }
+    }
+
+    public String getProductTitleAt(int index) {
+        LoggerHelper.info("[ADMIN][PRODUCT_PAGE] Lấy tên sản phẩm tại index: " + index);
+
+        try {
+            String title = getTextOf(productNames.get(index));
+            LoggerHelper.info("[ADMIN][PRODUCT_PAGE] Tên sản phẩm tại index " + index + ": " + title);
+            return title;
+        } catch (Exception e) {
+            LoggerHelper.warn("[ADMIN][PRODUCT_PAGE] Không lấy được tên sản phẩm: " + e.getMessage());
+            return "";
+        }
     }
 
     public AdminProductPage clickAdd() {
+        LoggerHelper.info("[ADMIN][PRODUCT_PAGE] Click nút thêm sản phẩm");
         clickElement(btnAdd);
         return this;
     }
 
     public AdminProductPage clickEditAt(int index) {
-        System.out.println("[AdminProductPage] Clicking edit at index: " + index);
+        LoggerHelper.info("[ADMIN][PRODUCT_PAGE] Click nút sửa sản phẩm tại index: " + index);
         clickElement(listEditBtns.get(index));
         return this;
     }
 
     public AdminProductPage clickDeleteAt(int index) {
-        System.out.println("[AdminProductPage] Clicking delete at index: " + index);
+        LoggerHelper.info("[ADMIN][PRODUCT_PAGE] Click nút xóa sản phẩm tại index: " + index);
         clickElement(listDeleteBtns.get(index));
+        wait.until(ExpectedConditions.visibilityOf(confirmModal));
+        LoggerHelper.info("[ADMIN][PRODUCT_PAGE] Xác nhận xóa sản phẩm");
+        clickElement(btnConfirmDelete);
+
+        return this;
+    }
+
+    public AdminProductPage clickCancelDeleteAt(int index) {
+        LoggerHelper.info("[ADMIN][PRODUCT_PAGE] Click xóa rồi hủy xóa sản phẩm tại index: " + index);
+        clickElement(listDeleteBtns.get(index));
+        wait.until(ExpectedConditions.visibilityOf(confirmModal));
+        LoggerHelper.info("[ADMIN][PRODUCT_PAGE] Click hủy xóa");
+        clickElement(btnCancelDelete);
+
+        return this;
+    }
+
+    public String getNotificationMessage() {
+        LoggerHelper.info("[ADMIN][PRODUCT_PAGE] Lấy thông báo notification");
+
         try {
-            Alert confirm = wait.until(ExpectedConditions.alertIsPresent());
-            confirm.accept();
-            Thread.sleep(800);
+            String message = wait.until(ExpectedConditions.visibilityOf(notification))
+                    .getText()
+                    .trim();
+
+            LoggerHelper.info("[ADMIN][PRODUCT_PAGE] Notification: " + message);
+            return message;
         } catch (Exception e) {
-            System.out.println("[AdminProductPage] No confirm dialog: " + e.getMessage());
+            LoggerHelper.warn("[ADMIN][PRODUCT_PAGE] Không lấy được notification: " + e.getMessage());
+            return "";
         }
-        return this;
     }
 
-    // --- Form actions ---
-    public AdminProductPage enterTitle(String title) {
-        clearAndSendText(txtTitle, title);
-        return this;
-    }
+    public boolean isProductInList(String title) {
+        LoggerHelper.info("[ADMIN][PRODUCT_PAGE] Kiểm tra sản phẩm có trong danh sách: " + title);
 
-    public AdminProductPage enterPrice(String price) {
-        clearAndSendText(txtPrice, price);
-        return this;
-    }
-
-    public AdminProductPage uploadThumbnail(String filePath) {
-        System.out.println("[AdminProductPage] Uploading thumbnail: " + filePath);
-        ((JavascriptExecutor) driver).executeScript(
-                "arguments[0].style.display='block';", inputThumbnail);
-        inputThumbnail.sendKeys(filePath);
-        return this;
-    }
-
-    public AdminProductPage clickSave() {
-        clickElement(btnSave);
-        return this;
-    }
-
-    public String clickSaveAndGetAlert() {
-        clickSave();
         try {
-            Alert alert = wait.until(ExpectedConditions.alertIsPresent());
-            String text = alert.getText().trim();
-            alert.accept();
-            return text;
-        } catch (Exception e) { return ""; }
+            boolean exists = productNames.stream()
+                    .anyMatch(item -> item.getText().trim().contains(title));
+
+            LoggerHelper.info("[ADMIN][PRODUCT_PAGE] Sản phẩm tồn tại: " + exists);
+            return exists;
+        } catch (Exception e) {
+            LoggerHelper.warn("[ADMIN][PRODUCT_PAGE] Không kiểm tra được sản phẩm: " + e.getMessage());
+            return false;
+        }
     }
 
-    // --- Assertions ---
-    public String getErrorMessage() {
-        try { return wait.until(ExpectedConditions.visibilityOf(lblError)).getText().trim(); }
-        catch (Exception e) { return ""; }
+    public boolean isNoServerError() {
+        LoggerHelper.info("[ADMIN][PRODUCT_PAGE] Kiểm tra trang không bị lỗi server");
+
+        String title = driver.getTitle().toLowerCase();
+        String body = driver.getPageSource().toLowerCase();
+
+        boolean safe = !title.contains("500")
+                && !body.contains("internal server error")
+                && !body.contains("whitelabel error page");
+
+        LoggerHelper.info("[ADMIN][PRODUCT_PAGE] Trang không bị lỗi server: " + safe);
+        return safe;
     }
 
-    public boolean isSaveButtonEnabled() {
-        try {
-            return btnSave.getAttribute("disabled") == null;
-        } catch (Exception e) { return true; }
-    }
-
-    public String getPriceValidationMessage() {
-        return (String) ((JavascriptExecutor) driver)
-                .executeScript("return arguments[0].validationMessage;", txtPrice);
-    }
 }

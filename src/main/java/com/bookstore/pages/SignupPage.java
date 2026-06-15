@@ -1,8 +1,5 @@
 package com.bookstore.pages;
-import org.openqa.selenium.JavascriptExecutor;
-import org.openqa.selenium.Keys;
-import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.WebElement;
+import org.openqa.selenium.*;
 import org.openqa.selenium.support.FindBy;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.Select;
@@ -78,7 +75,7 @@ public class SignupPage extends BasePage {
     }
 
     public SignupPage selectGender(String genderValue) {
-        Select select = new Select(wait.until(ExpectedConditions.elementToBeClickable(selRegisterGender)));
+        Select select = new Select(waitUntilClickable(selRegisterGender));
         select.selectByValue(genderValue);
         return this;
     }
@@ -109,6 +106,7 @@ public class SignupPage extends BasePage {
     public void clickSubmitExpectingSuccess() {
         WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
         wait.until(ExpectedConditions.elementToBeClickable(btnRegisterSubmit));
+        scrollToElement(btnRegisterSubmit);
         btnRegisterSubmit.click();
     }
 
@@ -126,11 +124,11 @@ public class SignupPage extends BasePage {
     }
 
     public String getErrorMessage() {
-        return wait.until(ExpectedConditions.visibilityOf(lblRegisterErrorMessage)).getText().trim();
+        return getTextOf(lblRegisterErrorMessage);
     }
 
     public String getCheckPwdWarning() {
-        return wait.until(ExpectedConditions.visibilityOf(pRegisterCheckPwdMessage)).getText().trim();
+        return getTextOf(pRegisterCheckPwdMessage);
     }
 
     public boolean isSubmitButtonEnabled() {
@@ -142,7 +140,7 @@ public class SignupPage extends BasePage {
 
     public boolean isOnEmailVerifyPage() {
         try {
-            return wait.until(ExpectedConditions.visibilityOf(txtVerifyCode)).isDisplayed();
+            return isElementVisible(txtVerifyCode);
         } catch (Exception e) {
             return false;
         }
@@ -151,7 +149,7 @@ public class SignupPage extends BasePage {
     public boolean isRedirectedToSuccess() {
         try {
             WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
-            return wait.until(ExpectedConditions.urlContains("/success"));
+            return waitForUrlContains("/success");
         } catch (Exception e) {
             return false;
         }
@@ -160,24 +158,25 @@ public class SignupPage extends BasePage {
 
     public void enterVerifyCode(String code) {
         WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
-        WebElement input = wait.until(ExpectedConditions.elementToBeClickable(txtVerifyCode));
+        WebElement input = waitUntilClickable(txtVerifyCode);
         input.clear();
         input.click();
         input.sendKeys(code);
     }
 
     public void clickVerify() {
-        JavascriptExecutor js = (JavascriptExecutor) driver;
-        js.executeScript("arguments[0].click();", btnVerify);
+        jsClick(btnVerify);
     }
 
     public boolean isOnSignupPage() {
-        return driver.getCurrentUrl().contains("/signup");
+        return waitForUrlContains("/signup");
     }
 
-    public String getPasswordValidationMessage() {
-        return (String) ((JavascriptExecutor) driver)
-                .executeScript("return arguments[0].validationMessage;", txtRegisterPassword);
+    public String getMessageAndAccept() {
+        Alert alert = wait.until(ExpectedConditions.alertIsPresent());
+        String alertText = alert.getText();
+        alert.accept();
+        return alertText;
     }
 
 }

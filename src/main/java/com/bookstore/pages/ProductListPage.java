@@ -1,28 +1,34 @@
 package com.bookstore.pages;
 
 import com.bookstore.factory.PageFactoryManager;
-import org.openqa.selenium.By;
-import org.openqa.selenium.JavascriptExecutor;
-import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.WebElement;
+import com.bookstore.utils.LoggerHelper;
+import org.openqa.selenium.*;
+import org.openqa.selenium.interactions.Actions;
 import org.openqa.selenium.support.FindBy;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.Select;
+
+import java.time.Duration;
 import java.util.List;
 
-/**
- * Page Object: Trang danh sách sản phẩm (/books).
- * Đã cấu hình đồng bộ chính xác với cấu trúc DOM sinh bởi AJAX.
- */
 public class ProductListPage extends BasePage {
 
     private static final String PAGE_URL = "/books";
 
-    private static final By BOOK_ITEM_LOCATOR    = By.cssSelector("[data-testid='book-item']");
-    private static final By BOOK_NAME_IN_CARD    = By.cssSelector(".home-product-item__name");
-    private static final By BOOK_PRICE_IN_CARD   = By.cssSelector(".home-product-item__price-current");
-    private static final By PAGINATION_ITEMS     = By.cssSelector("#pagination .page-item");
-    private static final By NEXT_PAGE_BTN        = By.cssSelector("#pagination .page-item:last-child .page-link");
+    private static final By PRODUCT_CONTAINER = By.cssSelector("[data-testid='product-container']");
+    private static final By BOOK_ITEM = By.cssSelector("[data-testid='book-item']");
+    private static final By BOOK_LINK = By.cssSelector("[data-testid='book-link']");
+    private static final By BOOK_NAME = By.cssSelector("[data-testid='book-name']");
+    private static final By BOOK_PRICE = By.cssSelector("[data-testid='book-price']");
+
+    @FindBy(css = "[data-testid='category-section']")
+    private WebElement categorySection;
+
+    @FindBy(css = "[data-testid='publisher-section']")
+    private WebElement publisherSection;
+
+    @FindBy(css = "[data-testid='category-label']")
+    private List<WebElement> categoryLabels;
 
     @FindBy(css = "[data-testid='filter-category']")
     private List<WebElement> radioFilterCategory;
@@ -32,18 +38,6 @@ public class ProductListPage extends BasePage {
 
     @FindBy(css = "[data-testid='filter-sort']")
     private WebElement selFilterSort;
-
-    @FindBy(id = "product-container")
-    private WebElement productContainer;
-
-    @FindBy(id = "pagination")
-    private WebElement paginationWrapper;
-
-    @FindBy(id = "searchInput")
-    private WebElement searchInput;
-
-    @FindBy(css = "button.search-btn")
-    private WebElement searchButton;
 
     public ProductListPage(WebDriver driver, String baseUrl) {
         super(driver, baseUrl);
@@ -56,117 +50,176 @@ public class ProductListPage extends BasePage {
     }
 
     public ProductListPage navigateTo(String url) {
-        driver.get(url);
+        if (!url.startsWith("http")) {
+            driver.get(baseUrl + url);
+        } else {
+            driver.get(url);
+        }
+
         waitForProductsToLoad();
         return this;
     }
 
-    public ProductListPage filterByCategory(String categoryLabel) {
-        boolean found = false;
-        for (WebElement radio : radioFilterCategory) {
-            String val = radio.getAttribute("value");
-            String id = radio.getAttribute("id");
-            String label = "";
-            try {
-                label = driver.findElement(By.cssSelector("label[for='" + id + "']")).getText().trim();
-            } catch (Exception ignored) {
-                label = val;
+    private void clickRadioByValueOrLabel(List<WebElement> radios,
+                                          String expected,
+                                          String filterName) {
+        if (radios == null || radios.isEmpty()) {
+            throw new RuntimeException("Không tìm thấy danh sách radio: " + filterName);
+        }
+
+        for (int i = 0; i < radios.size(); i++) {
+            WebElement radio = radios.get(i);
+            String actualValue = radio.getAttribute("value");
+
+            String actualLabel = "";
+            if (i < categoryLabels.size()) {
+                actualLabel = categoryLabels.get(i).getText().trim();
             }
-            if (label.equalsIgnoreCase(categoryLabel) || val.equalsIgnoreCase(categoryLabel)) {
-                ((JavascriptExecutor) driver).executeScript("arguments[0].click();", radio);
-                found = true;
-                break;
+
+            LoggerHelper.info("[PRODUCT_LIST_PAGE] " + filterName
+                    + " item[" + i + "] value='" + actualValue + "', label='" + actualLabel + "'");
+
+            boolean matchedByValue = actualValue != null && actualValue.equalsIgnoreCase(expected);
+            boolean matchedByLabel = actualLabel.equalsIgnoreCase(expected);
+
+            if (matchedByValue || matchedByLabel) {
+                LoggerHelper.info("[PRODUCT_LIST_PAGE] Chọn " + filterName + ": " + expected);
+                scrollToElement(radio);
+                jsClick(radio);
+                waitForProductsToLoad();
+                return;
             }
         }
-        if (!found) throw new IllegalArgumentException("Không tìm thấy Danh mục: " + categoryLabel);
+        throw new IllegalArgumentException("Không tìm thấy " + filterName + " trên UI: " + expected);
+    }
+
+    public ProductListPage filterByCategory(String categoryLabelOrValue) {
+        clickRadioByValueOrLabel(radioFilterCategory, categoryLabelOrValue, "Danh mục");
         waitForProductsToLoad();
         return this;
     }
 
     public ProductListPage filterByPrice(String priceRangeValue) {
-        boolean found = false;
         for (WebElement radio : radioFilterPrice) {
-            if (priceRangeValue.equalsIgnoreCase(radio.getAttribute("value"))) {
-                ((JavascriptExecutor) driver).executeScript("arguments[0].click();", radio);
-                found = true;
-                break;
+            String actualValue = radio.getAttribute("value");
+            if (priceRangeValue.equalsIgnoreCase(actualValue)) {
+                scrollToElement(radio);
+                jsClick(radio);
+                waitForProductsToLoad();
+                return this;
             }
         }
-        if (!found) throw new IllegalArgumentException("Không tìm thấy khoảng giá trên UI: " + priceRangeValue);
-        waitForProductsToLoad();
-        return this;
+        throw new IllegalArgumentException(
+                "Không tìm thấy khoảng giá  trên UI: " + priceRangeValue
+        );
     }
 
-
     public ProductListPage sortBy(String visibleText) {
-        wait.until(ExpectedConditions.elementToBeClickable(selFilterSort));
+        clickElement(selFilterSort);
         new Select(selFilterSort).selectByVisibleText(visibleText);
         waitForProductsToLoad();
         return this;
     }
 
     public List<WebElement> getDisplayedBooks() {
-        wait.until(ExpectedConditions.visibilityOfElementLocated(BOOK_ITEM_LOCATOR));
-        return driver.findElements(BOOK_ITEM_LOCATOR);
+        wait.until(ExpectedConditions.visibilityOfElementLocated(PRODUCT_CONTAINER));
+        return driver.findElements(BOOK_ITEM);
     }
 
     public int getBookCount() {
-        try { return getDisplayedBooks().size(); } catch (Exception e) { return 0; }
+        return driver.findElements(BOOK_ITEM).size();
     }
 
     public String getBookNameAt(int index) {
-        return getDisplayedBooks().get(index).findElement(BOOK_NAME_IN_CARD).getText().trim();
+        return getDisplayedBooks()
+                .get(index)
+                .findElement(BOOK_NAME)
+                .getText()
+                .trim();
     }
 
     public String getBookPriceAt(int index) {
-        return getDisplayedBooks().get(index).findElement(BOOK_PRICE_IN_CARD).getText().trim();
+        return getDisplayedBooks()
+                .get(index)
+                .findElement(BOOK_PRICE)
+                .getText()
+                .trim();
     }
 
     public long getBookPriceAsLong(int index) {
         String raw = getBookPriceAt(index).replaceAll("[^0-9]", "");
-        return raw.isEmpty() ? 0L : Long.parseLong(raw);
-    }
 
-    public boolean isPageSafe() {
-        String title = driver.getTitle().toLowerCase();
-        return !title.contains("500") && !title.contains("error");
+        if (raw.isEmpty()) {
+            throw new RuntimeException("Không đọc được giá sách tại index: " + index);
+        }
+
+        return Long.parseLong(raw);
     }
 
     public ProductDetailPage clickBookAt(int index) {
-        // 1. Đợi và lấy toàn bộ danh sách các Card sách đang hiển thị
-        List<WebElement> books = getDisplayedBooks();
-        WebElement targetBookCard = books.get(index);
-
-        // 2. Tìm chính xác thẻ <a> chứa thuộc tính href điều hướng bên trong Card đó
-        WebElement hrefLink = targetBookCard.findElement(By.xpath("./a | .//a"));
-
-        System.out.println("[ProductListPage] Đang thực hiện cuộn và click vào sách tại vị trí index: " + index);
-
-        // 3. Cuộn chuột đưa phần tử vào tầm nhìn hiển thị để tránh lỗi bị che khuất bởi Header/Footer cố định
-        ((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView({behavior: 'smooth', block: 'center'});", hrefLink);
-
-        // Thêm một nhịp nghỉ cực ngắn (100-200ms) để hiệu ứng cuộn trang hoàn tất ổn định
-        try { Thread.sleep(200); } catch (InterruptedException ignored) {}
-
-        // 4. Ép trình duyệt kích hoạt sự kiện click trực tiếp trên thẻ <a> bằng JavaScript (Bypass mọi lớp đè giao diện)
-        ((JavascriptExecutor) driver).executeScript("arguments[0].click();", hrefLink);
-
-        // 5. Trả về đối tượng trang chi tiết sản phẩm qua PageFactoryManager
+        WebElement book = getDisplayedBooks().get(index);
+        WebElement link = book.findElement(BOOK_LINK);
+        scrollToElement(link);
+        clickElement(link);
         return PageFactoryManager.getProductDetailPage(driver, baseUrl);
     }
 
-    public int getPaginationCount() {
-        try {
-            if (!paginationWrapper.isDisplayed()) return 0;
-            return driver.findElements(PAGINATION_ITEMS).size();
-        } catch (Exception e) { return 0; }
-    }
 
     private void waitForProductsToLoad() {
+        wait.until(ExpectedConditions.presenceOfElementLocated(PRODUCT_CONTAINER));
+        wait.until(ExpectedConditions.visibilityOfElementLocated(PRODUCT_CONTAINER));
         try {
-            // Chờ đồng bộ 800ms khớp hoàn toàn với độ trễ phản hồi của hàm $.ajax trên Frontend
             Thread.sleep(800);
-            wait.until(ExpectedConditions.visibilityOf(productContainer));
-        } catch (Exception ignored) {}
+        } catch (InterruptedException ignored) {
+        }
     }
+
+    public boolean arePricesAscending() {
+        int count = getBookCount();
+        for (int i = 0; i < count - 1; i++) {
+            long current = getBookPriceAsLong(i);
+            long next = getBookPriceAsLong(i + 1);
+            System.out.printf("Compare ASC: %d <= %d%n", current, next);
+            if (current > next) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public boolean arePricesDescending() {
+        int count = getBookCount();
+        for (int i = 0; i < count - 1; i++) {
+            long current = getBookPriceAsLong(i);
+            long next = getBookPriceAsLong(i + 1);
+            LoggerHelper.info("[PRODUCT_LIST_PAGE] So sánh giá tăng dần: " + current + " <= " + next);
+            if (current < next) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public String getVisibleBookSignature() {
+        StringBuilder signature = new StringBuilder();
+        int count = getBookCount();
+
+        for (int i = 0; i < count; i++) {
+            signature.append(getBookNameAt(i))
+                    .append("|")
+                    .append(getBookPriceAsLong(i))
+                    .append(";");
+        }
+
+        return signature.toString();
+    }
+
+    public boolean isProductContainerDisplayed() {
+        try {
+            return driver.findElement(PRODUCT_CONTAINER).isDisplayed();
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
 }

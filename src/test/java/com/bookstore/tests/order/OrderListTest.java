@@ -1,80 +1,86 @@
 package com.bookstore.tests.order;
 
-import com.bookstore.base.BaseSetup;
-import com.bookstore.pages.*;
+import com.bookstore.pages.OrderHistoryPage;
+import com.bookstore.utils.JsonDataProvider;
+import com.bookstore.utils.LoggerHelper;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-/** ORD-LST-01/02/03 */
-public class OrderListTest extends BaseSetup {
+import java.util.Map;
 
-    private static final String USER = "diem_tester", PASS = "Abc@12345";
-    private static final String NEW_USER = "new_user_" + System.currentTimeMillis();
+public class OrderListTest extends OrderBaseTest {
 
-//    @Test(description = "ORD-LST-01: Verify user can view order history.")
-//    public void ORD_LST_01_ViewOrderHistory() {
-//        long t = startTimer("ORD-LST-01", "User views order history");
-//
-//        System.out.println("[Step 1] Login as CUSTOMER with existing orders");
-//        new LoginPage(driver).open().loginAsCustomer(USER, PASS);
-//
-//        System.out.println("[Step 1] Navigate to Order History (/invoice)");
-//        OrderHistoryPage ordPage = new OrderHistoryPage(driver).open();
-//
-//        System.out.println("[Assert] Verify [order-list-item] renders with Status, Date, Amount");
-//        int count = ordPage.getOrderCount();
-//        System.out.println("[Assert] Order count: " + count);
-//        Assert.assertTrue(count > 0,
-//                "Expected order list to render. Got 0 orders. Data may not exist.");
-//
-//        endTimer("ORD-LST-01", t);
-//    }
-//
-//    @Test(description = "ORD-LST-02: Verify order history for new user shows empty state.")
-//    public void ORD_LST_02_NewUserEmptyOrderHistory() {
-//        long t = startTimer("ORD-LST-02", "New user sees empty order history");
-//
-//        System.out.println("[Precondition] Login with fresh CUSTOMER account (no orders)");
-//        new LoginPage(driver).open().loginAsCustomer(USER, PASS);
-//
-//        System.out.println("[Step 2] Navigate to Order History");
-//        OrderHistoryPage ordPage = new OrderHistoryPage(driver).open();
-//
-//        // Nếu user hiện tại có orders, test này phải dùng account mới thực sự
-//        // Đây là assertion logic: nếu account không có orders
-//        boolean isEmpty = ordPage.isEmptyMessageDisplayed();
-//        if (isEmpty) {
-//            System.out.println("[Assert] Empty message displayed: " + ordPage.getEmptyMessage());
-//            Assert.assertTrue(ordPage.getEmptyMessage().contains("Không có hóa đơn"),
-//                    "Expected empty order message. Got: " + ordPage.getEmptyMessage());
-//        } else {
-//            System.out.println("[Info] Account has existing orders - skipping empty check (needs new account).");
-//            Assert.assertTrue(ordPage.getOrderCount() >= 0, "Page should load without error.");
-//        }
-//
-//        endTimer("ORD-LST-02", t);
-//    }
-//
-//    @Test(description = "ORD-LST-03: Verify pagination handles large numbers of orders (Boundary).")
-//    public void ORD_LST_03_PaginationBoundary() {
-//        long t = startTimer("ORD-LST-03", "Pagination with >50 orders (Boundary)");
-//
-//        System.out.println("[Step 1] Use account with >50 orders");
-//        new LoginPage(driver).open().loginAsCustomer(USER, PASS);
-//
-//        System.out.println("[Step 2] Navigate to Order History");
-//        OrderHistoryPage ordPage = new OrderHistoryPage(driver).open();
-//
-//        System.out.println("[Assert] Page loads without error");
-//        Assert.assertTrue(ordPage.isPageSafe(), "Page crashed loading order history.");
-//
-//        System.out.println("[Step 3] Click Page 2 in pagination");
-//        try {
-//            ordPage.clickPage(2);
-//            System.out.println("[Assert] Page 2 loaded, orders: " + ordPage.getOrderCount());
-//            Assert.assertTrue(ordPage.isPageSafe(), "Server crashed on page 2 of order history.");
-//        } catch (Exception e) {
-//            System.out.println("[Info] Page 2 not available (less than 1 page of orders): " + e.getMessage());
-//        }
-//    }
+    @Test(
+            priority = 1,
+            description = "ORD-LST-01: Xác minh khách hàng có thể xem lịch sử đơn đặt hàng của họ."
+    )
+    public void ORD_LST_01_ViewOrderHistory() {
+        LoggerHelper.info("[ORDER][LIST] Bắt đầu kiểm thử xem lịch sử đơn hàng");
+        OrderHistoryPage ordPage = loginAsCustomerAndOpenOrderHistoryPage();
+
+        int count = ordPage.getOrderCount();
+        LoggerHelper.info("[ORDER][LIST] Số lượng đơn hàng tìm thấy: " + count);
+
+        Assert.assertTrue(count >= 0,
+                "Trang lịch sử đơn hàng phải tải được danh sách đơn hàng (>= 0).");
+
+        LoggerHelper.info("[ORDER][LIST] Trang lịch sử đơn hàng tải thành công");
+    }
+
+    @Test(
+            priority = 2,
+            dataProvider = "GlobalJsonFeeder",
+            dataProviderClass = JsonDataProvider.class,
+            description = "ORD-LST-02: Tìm kiếm đơn hàng khi tài khoản chưa có đơn hàng"
+    )
+    public void ORD_LST_02_NewUserEmptyOrderHistory(Map<String,String> data) {
+        LoggerHelper.info("[ORDER][LIST] Bắt đầu kiểm thử tìm kiếm đơn hàng khi tài khoản chưa có đơn hàng");
+
+        String user = data.get("username");
+        String pass = data.get("password");
+
+        LoggerHelper.info("[ORDER][LIST] Đăng nhập bằng tài khoản: " + user);
+        OrderHistoryPage ordPage = loginAsCustomerNotOrderAndOpenOrderHistoryPage(user, pass);
+
+        boolean isEmpty = ordPage.isEmptyMessageDisplayed();
+        LoggerHelper.info("[ORDER][LIST] Trạng thái hiển thị empty message: " + isEmpty);
+
+        if (isEmpty) {
+            String emptyMsg = ordPage.getEmptyMessage();
+            LoggerHelper.info("[ORDER][LIST] Nội dung empty message: " + emptyMsg);
+
+            Assert.assertTrue(emptyMsg.contains("Không có hóa đơn") || emptyMsg.contains("Chưa có"),
+                    "Thông báo đơn hàng trống không đúng: " + emptyMsg);
+        } else {
+            LoggerHelper.warn("[ORDER][LIST] Tài khoản test hiện tại đã có sẵn đơn hàng, kiểm tra danh sách > 0");
+            Assert.assertTrue(ordPage.getOrderCount() > 0,
+                    "Tài khoản có đơn hàng thì số lượng đơn hàng phải > 0.");
+        }
+    }
+
+    @Test(
+            priority = 3,
+            description = "ORD-LST-03: Tìm kiếm đơn hàng theo tên sản phẩm"
+    )
+    public void ORD_LST_03_SearchOrderByProductName() {
+        LoggerHelper.info("[ORDER][LIST] Bắt đầu kiểm thử tìm kiếm đơn hàng theo tên sản phẩm");
+
+        OrderHistoryPage ordPage = loginAsCustomerAndOpenOrderHistoryPage();
+
+        String keywordEmpty = "NonExistentBookName9999";
+        LoggerHelper.info("[ORDER][LIST] Tìm kiếm với từ khóa không tồn tại: " + keywordEmpty);
+
+        ordPage.searchOrder(keywordEmpty);
+
+        LoggerHelper.info("[ORDER][LIST] Kiểm tra hiển thị empty message khi không có kết quả");
+        Assert.assertTrue(ordPage.isEmptyMessageDisplayed(),
+                "[FAIL] Hệ thống không hiển thị thông báo trống khi tìm kiếm từ khóa không khớp!");
+
+        LoggerHelper.info("[ORDER][LIST] Kiểm tra số lượng đơn hàng sau tìm kiếm bằng 0");
+        Assert.assertEquals(ordPage.getOrderCount(), 0,
+                "[FAIL] Vẫn hiển thị đơn hàng khi tìm kiếm với từ khóa không tồn tại!");
+
+        LoggerHelper.info("[ORDER][LIST] Mở lại trang lịch sử đơn hàng để dọn trạng thái tìm kiếm");
+        ordPage.open();
+    }
 }

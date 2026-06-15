@@ -1,0 +1,78 @@
+[
+  {
+    "type": "ADM_PRO_01",
+    "title_prefix": "Sách Tự Động",
+    "author": "Tác giả test",
+    "price": "150000",
+    "quantity": "10",
+    "category_index": "1",
+    "publisher_index": "1"
+  },
+  {
+    "type": "ADM_PRO_02",
+    "title_prefix": "Sách Giá Âm",
+    "invalid_price": "-10"
+  },
+  {
+    "type": "ADM_PRO_03",
+    "title_prefix": "Sách File Exe",
+    "price": "100000",
+    "quantity": "10",
+    "invalid_file_path": "\\src\\test\\resources\\data\\shell.exe"
+  },
+  {
+    "type": "ADM_PRD_04",
+    "title_prefix": "Sách Trước Sửa",
+    "updated_title_prefix": "Sách Sau Sửa",
+    "author": "Tác giả test",
+    "price": "150000",
+    "quantity": "10",
+    "category_index": "1",
+    "publisher_index": "1"
+  },
+  {
+    "type": "ADM_PRD_05",
+    "title_prefix": "Sách Test Blank",
+    "blank_title": "",
+    "author": "Tác giả test",
+    "price": "150000",
+    "quantity": "10",
+    "category_index": "1",
+    "publisher_index": "1"
+  },
+  {
+    "type": "ADM_PRD_01",
+    "title_prefix": "Sách Để Xóa",
+    "author": "Tác giả test",
+    "price": "150000",
+    "quantity": "10",
+    "category_index": "1",
+    "publisher_index": "1",
+    "status": "ACTIVE"
+  },
+  {
+    "type": "ADM_PRD_02",
+    "title_prefix": "Sách Để Xóa",
+    "author": "Tác giả test",
+    "price": "150000",
+    "quantity": "10",
+    "category_index": "1",
+    "publisher_index": "1",
+    "status": "ACTIVE"
+  },
+  {
+    "type": "ADM_USR_01",
+    "username": "thinh123",
+    "expected_status": "Khóa"
+  },
+  {
+    "type": "ADM_USR_02",
+    "username": "thinh123",
+    "password": "diem123"
+  },
+  {
+    "type": "ADM_USR_03",
+    "username": "admin",
+    "expected_error": "không thể khóa"
+  }
+]

@@ -5,6 +5,7 @@ import org.openqa.selenium.*;
 import org.openqa.selenium.support.FindBy;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
+import org.testng.Assert;
 
 import java.time.Duration;
 
@@ -62,46 +63,58 @@ public class ProductDetailPage extends BasePage {
     }
 
     public ProductDetailPage navigateTo(String rawUrl) {
-        driver.get(rawUrl);
+        driver.get(driver + rawUrl);
         return this;
     }
 
     public ProductDetailPage clickAddToCart() {
         clickElement(btnAddToCart);
+        waitForLoadProductToCart();
         return this;
     }
 
+    protected void waitForLoadProductToCart() {
+        try {
+            WebDriverWait shortWait = new WebDriverWait(driver, Duration.ofSeconds(5));
+            shortWait.until(ExpectedConditions.presenceOfElementLocated(By.className("container_productDetail")));
+        } catch (Exception ignored) {
+        }
+    }
+
     public ProductDetailPage forceSetQuantity(int qty) {
-        System.out.println("[ProductDetailPage] Force setting quantity to: " + qty);
-        ((JavascriptExecutor) driver).executeScript(
-                "arguments[0].removeAttribute('max'); arguments[0].value = arguments[1];",
-                inputQuantity, String.valueOf(qty));
+        System.out.println("[PRODUCT_DETAIL_PAGE] Tiến hành nhập số lượng: " + qty);
+        try {
+            isElementVisible(txtQuantityInput);
+            txtQuantityInput.clear();
+            txtQuantityInput.sendKeys(String.valueOf(qty), Keys.TAB);
+        } catch (Exception e) {
+            System.out.println("[ERROR] Lỗi khi gõ giá trị vào ô số lượng: " + e.getMessage());
+        }
         return this;
     }
 
     public boolean isThumbnailDisplayed() {
         try {
-            return wait.until(ExpectedConditions.visibilityOf(imgThumbnail)).isDisplayed();
+            return isElementVisible(imgThumbnail);
         } catch (Exception e) {
             return false;
         }
     }
 
     public String getTitle() {
-        return wait.until(ExpectedConditions.visibilityOf(lblTitle)).getText().trim();
+        return getTextOf(lblTitle);
     }
 
     public String getPrice() {
-        return wait.until(ExpectedConditions.visibilityOf(lblPrice)).getText().trim();
+        return getTextOf(lblPrice);
     }
 
     public String getDescription() {
-        return wait.until(ExpectedConditions.visibilityOf(lblDescription)).getText().trim();
+        return getTextOf(lblDescription);
     }
 
     public int getStockQuantity() {
-        wait.until(ExpectedConditions.visibilityOf(lblStockQuantity));
-        String rawText = lblStockQuantity.getText().trim();
+        String rawText = getTextOf(lblStockQuantity);
         String numbersOnly = rawText.replaceAll("[^0-9]", "");
         if (numbersOnly.isEmpty()) {
             return 0;
@@ -129,18 +142,9 @@ public class ProductDetailPage extends BasePage {
         }
     }
 
-    public String getCartSuccessMessage() {
-        try {
-            return wait.until(ExpectedConditions.visibilityOf(lblCartSuccessAlert)).getText().trim();
-        } catch (Exception ex) {
-            return "";
-
-        }
-    }
-
     public String getErrorMessage() {
         try {
-            return wait.until(ExpectedConditions.visibilityOf(lblCartErrorAlert)).getText().trim();
+            return getTextOf(lblCartErrorAlert);
         } catch (Exception e) {
             return getAndAcceptSuccessAlert();
         }
@@ -162,37 +166,14 @@ public class ProductDetailPage extends BasePage {
         return val == null || val.isEmpty() ? 0 : Integer.parseInt(val.trim());
     }
 
-    /**
-     * CART-ADD-03: Lấy giá trị max của [detail-quantity-input]
-     */
-    public int getQuantityMaxValue() {
-        String max = inputQuantity.getAttribute("max");
-        return max == null || max.isEmpty() ? 0 : Integer.parseInt(max.trim());
-    }
-
-    /**
-     * PROD-DET-02/03: Kiểm tra trang 404 / "không tồn tại"
-     */
     public boolean is404Page() {
         String title = driver.getTitle().toLowerCase();
         return title.contains("404") || title.contains("not found");
     }
 
-    /**
-     * PROD-DET-03: Kiểm tra không có DB crash (không có Error 500)
-     */
     public boolean isPageSafe() {
         String title = driver.getTitle().toLowerCase();
         return !title.contains("500") && !title.contains("whitelabel");
     }
 
-    /**
-     * PROD-DET-01: Kiểm tra tất cả thông tin sản phẩm đủ
-     */
-    public boolean isProductInfoComplete() {
-        return isThumbnailDisplayed()
-                && !getTitle().isEmpty()
-                && !getPrice().isEmpty()
-                && !getDescription().isEmpty();
-    }
 }

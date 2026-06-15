@@ -39,3 +39,5 @@ drivers/
 ### OS ###
 .DS_Store
 Thumbs.db
+
+!src/test/resources/data/shell.exe

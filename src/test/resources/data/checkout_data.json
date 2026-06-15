@@ -1,0 +1,59 @@
+[
+  {
+    "type": "CHECKOUT_INFO_01",
+    "name": "Nguyễn Thị Diễm",
+    "phone": "0987654321",
+    "address": "123 Đường Lê Lợi",
+    "city": "Hồ Chí Minh",
+    "district": "Quận 1",
+    "ward": "Phường Bến Nghé"
+  },
+  {
+    "type": "CHECKOUT_INFO_02",
+    "name": "Nguyễn Thị Diễm",
+    "phone": "0987654321",
+    "address": "123 Đường Lê Lợi",
+    "city": "Hồ Chí Minh",
+    "district": "Quận 1",
+    "ward": ""
+  },
+  {
+    "type": "CHECKOUT_INFO_03",
+    "name": "Nguyễn Thị Diễm",
+    "phone": "0987654321",
+    "address": "<script>alert('XSS')</script>",
+    "city": "Hồ Chí Minh",
+    "district": "Quận 1",
+    "ward": "Phường Bến Nghé"
+  },
+  {
+    "type": "CHECKOUT_COD_01",
+    "name": "Nguyễn Thị Diễm",
+    "phone": "0987654321",
+    "address": "123 Đường Lê Lợi",
+    "city": "Hồ Chí Minh",
+    "district": "Quận 1",
+    "ward": "Phường Bến Nghé",
+    "paymentMethod": "Thanh toán khi nhận hàng (COD)"
+  },
+  {
+    "type": "CHK_VNP_01",
+    "name": "Nguyễn Thị Diễm",
+    "phone": "0987654321",
+    "address": "123 Đường Lê Lợi",
+    "city": "Hồ Chí Minh",
+    "district": "Quận 1",
+    "ward": "Phường Bến Nghé",
+    "paymentMethod": "Chuyển khoản ngân hàng (VNPay)"
+  },
+  {
+    "type": "CHK_VNP_02",
+    "name": "Nguyễn Thị Diễm",
+    "phone": "0987654321",
+    "address": "123 Đường Lê Lợi",
+    "city": "Hồ Chí Minh",
+    "district": "Quận 1",
+    "ward": "Phường Bến Nghé",
+    "paymentMethod": "Chuyển khoản ngân hàng (VNPay)"
+  }
+]

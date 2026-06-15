@@ -60,4 +60,16 @@ public class PageFactoryManager {
         return new OrderHistoryPage(driver, baseUrl);
     }
 
+    public static AdminOrderEditPage getAdminOrderEditPage(WebDriver driver, String baseUrl) {
+        return new AdminOrderEditPage(driver, baseUrl);
+    }
+
+    public static AdminProductFormPage getAdminProductFormPage(WebDriver driver, String baseUrl) {
+        return new AdminProductFormPage(driver, baseUrl);
+    }
+
+    public static AdminUserEditPage getAdminUserEditPage(WebDriver driver, String baseUrl) {
+        return new AdminUserEditPage(driver, baseUrl);
+
+    }
 }

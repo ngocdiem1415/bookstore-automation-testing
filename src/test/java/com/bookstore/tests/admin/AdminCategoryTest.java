@@ -1,55 +1,118 @@
 package com.bookstore.tests.admin;
 
-import com.bookstore.base.BaseSetup;
 import com.bookstore.factory.PageFactoryManager;
-import com.bookstore.pages.*;
+import com.bookstore.pages.AdminCategoryPage;
+import com.bookstore.utils.LoggerHelper;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-/** ADM-CAT-01/02/03 */
-public class AdminCategoryTest extends BaseSetup {
 
-    private static final String ADMIN = "admin", PASS = "Abc@12345";
+public class AdminCategoryTest extends AdminBaseTest {
     private static final String NEW_CAT = "Mới_" + System.currentTimeMillis();
-    private static final String DUP_CAT = "Tiểu thuyết";
 
-    private AdminCategoryPage loginAndOpen() {
-        LoginPage loginPage = PageFactoryManager.getLoginPage(driver, baseUrl);
-        loginPage.loginAsAdmin(ADMIN, PASS);
-        return PageFactoryManager.getAdminCategoryPage(driver, baseUrl);
-    }
-
-    @Test(description = "ADM-CAT-01: Admin adds new category.")
+    @Test(priority = 1, description = "ADM-CAT-01: Kiểm thử thêm danh mục thành công")
     public void ADM_CAT_01_AddCategorySuccess() {
-        AdminCategoryPage page = loginAndOpen();
-        int before = page.getCategoryCount();
-        page.clickAdd().enterName(NEW_CAT);
-        String alert = page.clickSaveAndGetAlert();
+        LoggerHelper.info("[ADMIN][CATEGORY] Bắt đầu kiểm thử thêm danh mục thành công");
+        loginAsAdmin();
+        AdminCategoryPage page = PageFactoryManager.getAdminCategoryPage(getDriver(), baseUrl);
+        LoggerHelper.info("[ADMIN][CATEGORY] Mở trang quản lý danh mục");
         page.open();
-        Assert.assertTrue(page.isCategoryInList(NEW_CAT) || page.getCategoryCount() > before,
-                "Expected category '" + NEW_CAT + "' in list. Alert=" + alert);
+
+        int before = page.getCategoryCount();
+        LoggerHelper.info("[ADMIN][CATEGORY] Số danh mục trước khi thêm: " + before);
+
+        LoggerHelper.info("[ADMIN][CATEGORY] Thêm danh mục mới: " + NEW_CAT);
+        page.clickAdd()
+                .enterName(NEW_CAT)
+                .clickSave();
+
+        String message = page.getNotificationMessage();
+        LoggerHelper.info("[ADMIN][CATEGORY] Notification sau khi thêm: " + message);
+        Assert.assertTrue(
+                message.contains("Đã thêm") || message.contains("thêm"),
+                "Expected success message after adding category. Got: " + message
+        );
+
+        LoggerHelper.info("[ADMIN][CATEGORY] Mở lại trang để kiểm tra danh mục đã được thêm");
+        page.open();
+
+        int after = page.getCategoryCount();
+        LoggerHelper.info("[ADMIN][CATEGORY] Số danh mục sau khi thêm: " + after);
+
+        Assert.assertTrue(
+                page.isCategoryInList(NEW_CAT) || after > before,
+                "Expected category '" + NEW_CAT + "' in list or category count increased."
+        );
+        LoggerHelper.info("[ADMIN][CATEGORY] Kết thúc kiểm thử: PASS");
     }
 
-    @Test(description = "ADM-CAT-02: Duplicate category name shows error.",
-            dependsOnMethods = "ADM_CAT_01_AddCategorySuccess")
+    @Test(
+            priority = 2,
+            description = "ADM-CAT-02: Kiểm tra lỗi khi tên danh mục trùng lặp."
+    )
     public void ADM_CAT_02_DuplicateCategoryName() {
-        AdminCategoryPage page = loginAndOpen();
-        page.clickAdd().enterName(DUP_CAT).clickSave();
-        String error = page.getErrorMessage();
-        System.out.println("[Assert] Error: " + error);
-        Assert.assertTrue(error.contains("đã tồn tại") || !error.isEmpty(),
-                "Expected duplicate error. Got: " + error);
+        LoggerHelper.info("[ADMIN][CATEGORY] Bắt đầu kiểm thử thêm danh mục trùng tên");
+        loginAsAdmin();
+
+        AdminCategoryPage page = PageFactoryManager.getAdminCategoryPage(getDriver(), baseUrl);
+        page.open();
+        String duplicateName = "Danh mục test trùng";
+
+        LoggerHelper.info("[ADMIN][CATEGORY] Tạo dữ liệu ban đầu: " + duplicateName);
+        page.clickAdd()
+                .enterName(duplicateName)
+                .clickSave();
+        page.getNotificationMessage();
+
+        LoggerHelper.info("[ADMIN][CATEGORY] Thêm lại danh mục trùng tên: " + duplicateName);
+        page.open();
+
+        page.clickAdd()
+                .enterName(duplicateName)
+                .clickSave();
+
+        String message = page.getNotificationMessage();
+        LoggerHelper.info("[ADMIN][CATEGORY] Notification khi thêm trùng: " + message);
+        Assert.assertTrue(
+                message.contains("đã tồn tại") || message.contains("tồn tại"),
+                "Expected duplicate category message. Got: " + message
+        );
+        LoggerHelper.info("[ADMIN][CATEGORY] Kết thúc kiểm thử: PASS");
     }
 
-//    @Test(description = "ADM-CAT-03: Long category name >255 chars (Boundary).")
-//    public void ADM_CAT_03_LongNameBoundary() {
-//        AdminCategoryPage page = loginAndOpen();
-//        page.clickAdd().enterName("A".repeat(300)).clickSave();
-//        String error = page.getErrorMessage();
-//        System.out.println("[Assert] Error: " + error);
-//        boolean handled = !error.isEmpty() || !driver.getTitle().toLowerCase().contains("500");
-//        Assert.assertTrue(handled, "Server should handle long name gracefully.");
-//        Assert.assertFalse(driver.getTitle().toLowerCase().contains("500"),
-//                "Server crashed with >255 char name.");
-//    }
+    @Test(priority = 3,
+            description = "ADM-CAT-03: Kiểm tra lỗi khi thêm tên danh mục dài hơn 255 ký tự")
+    public void ADM_CAT_03_LongNameBoundary() {
+        LoggerHelper.info("[ADMIN][CATEGORY] Bắt đầu kiểm thử tên danh mục vượt giới hạn");
+        loginAsAdmin();
+        AdminCategoryPage page = PageFactoryManager.getAdminCategoryPage(getDriver(), baseUrl);
+
+        LoggerHelper.info("[ADMIN][CATEGORY] Mở trang quản lý danh mục");
+        page.open();
+
+        String longName = new String(new char[300]).replace('\0', 'A');
+        LoggerHelper.info("[ADMIN][CATEGORY] Nhập tên danh mục dài: " + longName.length() + " ký tự");
+
+        page.clickAdd()
+                .enterName(longName)
+                .clickSave();
+
+        String errorMessage = page.getErrorMessage();
+        String notification = page.getNotificationMessage();
+
+        LoggerHelper.info("[ADMIN][CATEGORY] Error message: " + errorMessage);
+        LoggerHelper.info("[ADMIN][CATEGORY] Notification: " + notification);
+
+        Assert.assertFalse(
+                driver.getTitle().toLowerCase().contains("500"),
+                "Server crashed with >255 char category name."
+        );
+        Assert.assertTrue(
+                errorMessage.contains("Tên danh mục không được vượt quá")
+                        || notification.contains("Tên danh mục không được vượt quá")
+                        || page.isNoServerError(),
+                "Expected validation message or no server crash for long category name."
+        );
+        LoggerHelper.info("[ADMIN][CATEGORY] Kết thúc kiểm thử: PASS");
+    }
 }

@@ -1,0 +1,10 @@
+[
+  {
+    "type": "PROD_DET_02",
+    "hidden_product_id": "999"
+  },
+  {
+    "type": "PROD_DET_03",
+    "sqli_url": "/books/%27%20OR%201%3D1--"
+  }
+]

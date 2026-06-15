@@ -41,38 +41,13 @@
         </classes>
     </test>
 
-<!--        &lt;!&ndash; FORGOT PASSWORD &ndash;&gt;-->
-<!--        <test name="Auth - Forgot Password">-->
-<!--            <classes>-->
-<!--                <class name="com.bookstore.tests.auth.PasswordRecoveryTest">-->
-<!--                    <methods>-->
-<!--                        <include name="AUTH_FGP_01_ForgotPasswordValidEmail"/>-->
-<!--                        <include name="AUTH_FGP_02_ForgotPasswordNonExistentEmail"/>-->
-<!--                        <include name="AUTH_FGP_03_ForgotPasswordRateLimiting"/>-->
-<!--                    </methods>-->
-<!--                </class>-->
-<!--            </classes>-->
-<!--        </test>-->
-
-<!--        <test name="Auth - Reset Password">-->
-<!--            <classes>-->
-<!--                <class name="com.bookstore.tests.auth.PasswordRecoveryTest">-->
-<!--                    <methods>-->
-<!--                        <include name="AUTH_RST_01_ResetPasswordValidToken"/>-->
-<!--                        <include name="AUTH_RST_02_ResetPasswordMismatch"/>-->
-<!--                        <include name="AUTH_RST_03_ResetPasswordExpiredToken"/>-->
-<!--                    </methods>-->
-<!--                </class>-->
-<!--            </classes>-->
-<!--        </test>-->
-
         <!-- PROFILE -->
         <test name="Auth - Profile">
             <classes>
                 <class name="com.bookstore.tests.auth.ProfileTest">
                     <methods>
                         <include name="AUTH_PRO_01_UpdateProfileSuccess"/>
-                        <include name="AUTH_PRO_02_UpdateProfileBlankUsername"/>
+                        <include name="AUTH_PRO_02_UpdateProfileBlankPhone"/>
                         <include name="AUTH_PRO_03_UploadAvatarExceedsSizeLimit"/>
                     </methods>
                 </class>

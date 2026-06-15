@@ -1,19 +1,17 @@
 [
   {
     "type": "AUTH_LOG_02",
-    "username": "ADMIN",
-    "password": "Abc12345"
+    "username": "diem_admin",
+    "password": "diem123"
   },
   {
     "type": "AUTH_LOG_03",
     "username": "diem",
-    "password": "Abc",
-    "expected_error": "Sai tên đăng nhập hoặc mật khẩu"
+    "password": "Abc"
   },
   {
     "type": "AUTH_LOG_04",
     "username": "admin' --",
-    "password": "123456",
-    "expected_error": ""
+    "password": "123456"
   }
 ]

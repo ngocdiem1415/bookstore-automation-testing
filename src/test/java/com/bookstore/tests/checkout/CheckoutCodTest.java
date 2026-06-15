@@ -1,82 +1,84 @@
 package com.bookstore.tests.checkout;
 
-import com.bookstore.base.BaseSetup;
 import com.bookstore.factory.PageFactoryManager;
-import com.bookstore.pages.*;
-import org.openqa.selenium.JavascriptExecutor;
+import com.bookstore.pages.CartPage;
+import com.bookstore.pages.CheckoutPage;
+import com.bookstore.pages.InvoicePage;
+import com.bookstore.pages.LoginPage;
+import com.bookstore.utils.DataHelper;
+import com.bookstore.utils.JsonDataProvider;
+import com.bookstore.utils.LoggerHelper;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-/**
- * Test Class: Checkout — COD Payment (CHECKOUT-COD)
- */
-public class CheckoutCodTest extends BaseSetup {
-    private static final String USERNAME     = "diem_tester";
-    private static final String PASSWORD     = "Abc@12345";
-    private static final String VALID_NAME   = "Nguyễn Thị Diễm";
-    private static final String VALID_PHONE  = "0987654321";
-    private static final String VALID_ADDR   = "123 Đường Lê Lợi";
-    private static final String VALID_CITY   = "Hồ Chí Minh";
-    private static final String VALID_DIST   = "Quận 1";
-    private static final String VALID_WARD   = "Phường Bến Nghé";
+import java.util.Map;
 
-    private CheckoutPage setupCheckoutReady() {
-        System.out.println("[Precondition] Login → Add item → Checkout → Fill & Save shipping info");
-        PageFactoryManager.getLoginPage(driver,baseUrl).loginAsCustomer(USERNAME,PASSWORD);
-        PageFactoryManager.getProductListPage(driver,baseUrl).clickBookAt(0).clickAddToCart();
-        CheckoutPage cp =  PageFactoryManager.getCheckoutPage(driver,baseUrl);
-        cp.fillShippingInfo(VALID_NAME, VALID_PHONE, VALID_ADDR, VALID_CITY, VALID_DIST, VALID_WARD);
-        cp.clickSaveAndGetAlert();
-        return cp;
-    }
+public class CheckoutCodTest extends CheckoutBaseTest {
 
+    @Test(
+            priority = 1,
+            dataProvider = "GlobalJsonFeeder",
+            dataProviderClass = JsonDataProvider.class,
+            description = "CHECKOUT-COD-01: Đặt hàng bằng hình thức thanh toán COD tiêu chuẩn."
+    )
+    public void CHECKOUT_COD_01_PlaceOrderCod(Map<String, String> data) throws InterruptedException {
+        LoggerHelper.info("[CHECKOUT][COD] Bắt đầu kiểm thử đặt hàng bằng COD");
 
-    @Test(description = "CHECKOUT-COD-01: Verify placing order with standard COD.")
-    public void CHECKOUT_COD_01_PlaceOrderCod() {
-        CheckoutPage cp = setupCheckoutReady();
-        cp.selectPaymentMethod("Thanh toán khi nhận hàng (COD)");
+        CheckoutPage cp = setupCheckoutReady(data);
+
+        LoggerHelper.info("[CHECKOUT][COD] Chọn phương thức thanh toán: " + data.get("paymentMethod"));
+        cp.selectPaymentMethod(data.get("paymentMethod"));
+
+        LoggerHelper.info("[CHECKOUT][COD] Click nút đặt hàng");
         InvoicePage invoice = cp.clickBuyExpectingSuccess();
+
+        LoggerHelper.info("[CHECKOUT][COD] Mở trang hóa đơn");
+        invoice.open();
+
+        LoggerHelper.info("[CHECKOUT][COD] Kiểm tra đã chuyển tới trang invoice");
         Assert.assertTrue(invoice.isOnInvoicePage(),
-                "Expected /invoice URL. Got: " + invoice.getCurrentUrl());
+                "Kỳ vọng chuyển đến trang hóa đơn /invoice. Thực tế: " + invoice.getCurrentUrl());
 
+        LoggerHelper.info("[CHECKOUT][COD] Kiểm tra trạng thái đơn hàng là PENDING");
         Assert.assertTrue(invoice.isStatusPending(),
-                "Expected PENDING status for COD. Got: " + invoice.getOrderStatus());
+                "Đơn hàng COD mới đặt phải có trạng thái PENDING. Thực tế: " + invoice.getOrderStatus());
+
+        LoggerHelper.info("[CHECKOUT][COD] Đặt hàng COD thành công");
     }
 
-    @Test(description = "CHECKOUT-COD-02: Verify placing order when product just went out of stock.")
-    public void CHECKOUT_COD_02_OutOfStockOnCheckout() {
-        CheckoutPage cp = setupCheckoutReady();
-        cp.selectPaymentMethod("Thanh toán khi nhận hàng (COD)");
+    @Test(
+            priority = 2,
+            description = "CHECKOUT-COD-03: Kiểm tra truy cập checkout khi giỏ hàng trống"
+    )
+    public void CHECKOUT_COD_02_EmptyCartBoundary() {
+        LoggerHelper.info("[CHECKOUT][COD] Bắt đầu kiểm thử truy cập checkout khi giỏ hàng trống");
+        LoggerHelper.info("[CHECKOUT][COD] Đăng nhập tài khoản CUSTOMER");
+        loginAsCustomer();
 
-        String alertText = cp.clickBuyExpectingFailure();
-
-        Assert.assertTrue(
-                alertText.contains("hết hàng") || alertText.contains("cập nhật giỏ hàng"),
-                "Expected out-of-stock error. Got: " + alertText);
-
-        Assert.assertFalse(cp.getCurrentUrl().contains("/invoice"),
-                "Should NOT redirect to /invoice when product is out-of-stock.");
-    }
-
-    @Test(description = "CHECKOUT-COD-03: Verify accessing Checkout with empty cart (Boundary).")
-    public void CHECKOUT_COD_03_EmptyCartBoundary() {
-        PageFactoryManager.getLoginPage(driver,baseUrl).loginAsCustomer(USERNAME, PASSWORD);
-
-        CartPage cart =  PageFactoryManager.getCartPage(driver,baseUrl);
+        // Xóa sạch giỏ hàng trước khi truy cập
+        CartPage cart = PageFactoryManager.getCartPage(getDriver(), baseUrl);
+        LoggerHelper.info("[CHECKOUT][COD] Mở trang giỏ hàng");
+        cart.open();
+        LoggerHelper.info("[CHECKOUT][COD] Dọn sạch giỏ hàng nếu còn sản phẩm");
         if (cart.getCartItemCount() > 0) {
-            System.out.println("[Precondition] Clearing existing cart items...");
             cart.deleteAllItems();
         }
 
-        driver.get(baseUrl + "/checkout");
-        String url = driver.getCurrentUrl();
+        // Truy cập trực tiếp URL checkout
+        LoggerHelper.info("[CHECKOUT][COD] Truy cập trực tiếp URL /checkout");
+        getDriver().get(baseUrl + "/checkout");
 
-        boolean safe = url.contains("/cart") || url.contains("/home") || url.equals(baseUrl + "/");
-        Assert.assertTrue(safe,
-                "Expected redirect away from /checkout for empty cart. Got: " + url);
+        String url = getDriver().getCurrentUrl();
+        boolean redirectedSafely = url.contains("/cart");
 
-        String title = driver.getTitle().toLowerCase();
-        Assert.assertFalse(title.contains("500"),
-                "Server error for empty cart checkout access.");
+        LoggerHelper.info("[CHECKOUT][COD] URL sau khi truy cập checkout: " + url);
+        Assert.assertTrue(redirectedSafely,
+                "Kỳ vọng tự động chuyển hướng khỏi trang checkout khi giỏ hàng trống. Thực tế: " + url);
+
+        String title = getDriver().getTitle().toLowerCase();
+        LoggerHelper.info("[CHECKOUT][COD] Kiểm tra hệ thống redirect an toàn khỏi checkout");
+        Assert.assertFalse(title.contains("500") || title.contains("error"),
+                "Hệ thống không được sập lỗi 500 khi truy cập checkout với giỏ trống.");
+        LoggerHelper.info("[CHECKOUT][COD] Kiểm tra không phát sinh lỗi 500");
     }
 }

@@ -1,0 +1,8 @@
+[
+  {
+    "type": "PROD_FIL_01",
+    "price_range": "100k-200k",
+    "min_price": "100000",
+    "max_price": "200000"
+  }
+]

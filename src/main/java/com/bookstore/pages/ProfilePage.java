@@ -50,7 +50,7 @@ public class ProfilePage extends BasePage {
     }
 
     public ProfilePage selectGender(String genderValue) {
-        Select select = new Select(wait.until(ExpectedConditions.elementToBeClickable(selProfileGender)));
+        Select select = new Select(waitUntilClickable(selProfileGender));
         select.selectByValue(genderValue);
         return this;
     }
@@ -81,13 +81,13 @@ public class ProfilePage extends BasePage {
     }
 
     public ProfilePage clearPhone() {
-        wait.until(ExpectedConditions.visibilityOf(txtProfilePhone)).clear();
+        clearText(txtProfilePhone);
         return this;
     }
 
     public String getErrorMessage() {
         try {
-            return wait.until(ExpectedConditions.visibilityOf(lblProfileErrorMessage)).getText().trim();
+            return getTextOf(lblProfileErrorMessage);
         } catch (Exception e) {
             return getAndAcceptSuccessAlert();
         }
@@ -96,7 +96,7 @@ public class ProfilePage extends BasePage {
 
     public String getSuccessMessage() {
         try {
-            return wait.until(ExpectedConditions.visibilityOf(lblProfileSuccessMessage)).getText().trim();
+            return getTextOf(lblProfileSuccessMessage);
         } catch (Exception e) {
             return getAndAcceptSuccessAlert();
         }
