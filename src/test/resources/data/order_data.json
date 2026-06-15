@@ -1,0 +1,10 @@
+[
+  {
+    "type": "ORD_DET_02",
+    "INVALID_ORDER_ID": "999"
+  },
+  {
+    "type": "ORD-DET-03",
+    "USER_B_ORDER_ID": "999"
+  }
+]
