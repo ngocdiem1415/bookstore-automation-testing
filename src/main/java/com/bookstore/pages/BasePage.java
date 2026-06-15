@@ -31,6 +31,10 @@ public class BasePage {
         wait.until(ExpectedConditions.elementToBeClickable(element)).click();
     }
 
+    protected WebElement waitUntilClickable(WebElement element) {
+        return wait.until(ExpectedConditions.elementToBeClickable(element));
+    }
+
     protected void sendText(WebElement element, String text) {
         wait.until(ExpectedConditions.visibilityOf(element)).sendKeys(text);
     }
@@ -40,6 +44,12 @@ public class BasePage {
         el.click();
         el.clear();
         el.sendKeys(text);
+    }
+
+    protected void clearText(WebElement element) {
+        WebElement el = wait.until(ExpectedConditions.visibilityOf(element));
+        el.click();
+        el.clear();
     }
 
     protected String getTextOf(WebElement element) {
@@ -55,7 +65,10 @@ public class BasePage {
     }
 
     protected void scrollToElement(WebElement element) {
-        ((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView(true);", element);
+        ((JavascriptExecutor) driver).executeScript(
+                "arguments[0].scrollIntoView({behavior: 'smooth', block: 'center', inline: 'nearest'});",
+                element
+        );
     }
 
 

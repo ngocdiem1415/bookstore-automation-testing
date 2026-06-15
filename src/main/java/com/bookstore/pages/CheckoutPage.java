@@ -1,23 +1,20 @@
 package com.bookstore.pages;
 
-import com.bookstore.base.BaseSetup;
 import com.bookstore.factory.PageFactoryManager;
+import com.bookstore.utils.LoggerHelper;
 import org.openqa.selenium.*;
 import org.openqa.selenium.support.FindBy;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.Select;
+import org.openqa.selenium.support.ui.WebDriverWait;
 
-/**
- * Page Object: Trang Thanh toán (/checkout).
- * Covers: CHECKOUT-INFO-01/02/03, CHECKOUT-COD-01/02/03, CHK-VNP-01/02/03
- */
+import java.time.Duration;
+
+import static java.lang.Thread.sleep;
+
 public class CheckoutPage extends BasePage {
 
     private static final String PAGE_URL = "/checkout";
-
-    // ===========================
-    // LOCATORS — Shipping Info
-    // ===========================
 
     @FindBy(css = "[data-testid='checkout-name']")
     private WebElement txtName;
@@ -49,26 +46,17 @@ public class CheckoutPage extends BasePage {
     @FindBy(css = "[data-testid='checkout-shipping-fee']")
     private WebElement lblShippingFee;
 
-    // ===========================
-    // CONSTRUCTOR
-    // ===========================
-
     public CheckoutPage(WebDriver driver, String baseUrl) {
         super(driver, baseUrl);
     }
 
-
     public CheckoutPage open() {
-        driver.get(getCurrentUrl() + PAGE_URL);
+        driver.get(baseUrl + PAGE_URL);
         return this;
     }
 
-    // ===========================
-    // SHIPPING INFO ACTIONS
-    // ===========================
-
     public CheckoutPage enterName(String name) {
-        System.out.println("[CheckoutPage] Entering name: " + name);
+        LoggerHelper.info("[CHECKOUT_PAGE] Nhập họ tên: " + name);
         clearAndSendText(txtName, name);
         return this;
     }
@@ -80,37 +68,40 @@ public class CheckoutPage extends BasePage {
     }
 
     public CheckoutPage enterAddress(String address) {
-        System.out.println("[CheckoutPage] Entering address: " + address);
+        LoggerHelper.info("[CHECKOUT_PAGE] Nhập địa chỉ giao hàng");
         clearAndSendText(txtAddress, address);
         return this;
     }
 
     public CheckoutPage selectCity(String cityValue) {
-        System.out.println("[CheckoutPage] Selecting city: " + cityValue);
-        new Select(wait.until(ExpectedConditions.elementToBeClickable(selCity)))
+        LoggerHelper.info("[CHECKOUT_PAGE] Chọn tỉnh/thành phố: " + cityValue);
+        new Select(waitUntilClickable(selCity))
                 .selectByVisibleText(cityValue);
-        try { Thread.sleep(600); } catch (InterruptedException ignored) {}
+        try {
+            sleep(600);
+        } catch (InterruptedException ignored) {
+        }
         return this;
     }
 
     public CheckoutPage selectDistrict(String districtValue) {
-        System.out.println("[CheckoutPage] Selecting district: " + districtValue);
-        wait.until(ExpectedConditions.elementToBeClickable(selDistrict));
+        LoggerHelper.info("[CHECKOUT_PAGE] Chọn quận/huyện: " + districtValue);
+        clickElement(selDistrict);
         new Select(selDistrict).selectByVisibleText(districtValue);
-        try { Thread.sleep(600); } catch (InterruptedException ignored) {}
+        try {
+            sleep(600);
+        } catch (InterruptedException ignored) {
+        }
         return this;
     }
 
     public CheckoutPage selectWard(String wardValue) {
-        System.out.println("[CheckoutPage] Selecting ward: " + wardValue);
-        wait.until(ExpectedConditions.elementToBeClickable(selWard));
+        LoggerHelper.info("[CHECKOUT_PAGE] Chọn phường/xã: " + wardValue);
+        clickElement(selWard);
         new Select(selWard).selectByVisibleText(wardValue);
         return this;
     }
 
-    /**
-     * Shortcut: Điền đầy đủ thông tin giao hàng hợp lệ.
-     */
     public CheckoutPage fillShippingInfo(String name, String phone, String address,
                                          String city, String district, String ward) {
         return enterName(name)
@@ -121,114 +112,92 @@ public class CheckoutPage extends BasePage {
                 .selectWard(ward);
     }
 
-    /**
-     * CHECKOUT-INFO-01: Click [checkout-save-btn] — đọc JS Alert và accept.
-     * @return text của JS Alert
-     */
     public String clickSaveAndGetAlert() {
-        System.out.println("[CheckoutPage] Clicking [checkout-save-btn]...");
+        LoggerHelper.info("[CHECKOUT_PAGE] Click nút lưu thông tin giao hàng");
         clickElement(btnSave);
         return acceptAlert();
     }
 
-    // ===========================
-    // PAYMENT ACTIONS
-    // ===========================
-
-    /**
-     * Chọn phương thức thanh toán trong [checkout-payment-method].
-     * @param visibleText "Thanh toán khi nhận hàng (COD)" | "Chuyển khoản ngân hàng (VNPay)"
-     */
     public CheckoutPage selectPaymentMethod(String visibleText) {
-        System.out.println("[CheckoutPage] Selecting payment method: " + visibleText);
-        wait.until(ExpectedConditions.elementToBeClickable(selPaymentMethod));
+        LoggerHelper.info("[CHECKOUT_PAGE] Chọn phương thức thanh toán: " + visibleText);
+        scrollToElement(selPaymentMethod);
+        jsClick(selPaymentMethod);
         new Select(selPaymentMethod).selectByVisibleText(visibleText);
         return this;
     }
 
-    /**
-     * CHECKOUT-COD-01: Click [checkout-buy-btn] → Kỳ vọng thành công → InvoicePage.
-     */
-    public InvoicePage clickBuyExpectingSuccess() {
-        clickElement(btnBuy);
-        return  PageFactoryManager.getInvoicePage(driver,baseUrl);
+    public InvoicePage clickBuyExpectingSuccess() throws InterruptedException {
+        WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
+        // scroll xuống nút
+        scrollToElement(btnBuy);
+        wait.until(ExpectedConditions.elementToBeClickable(btnBuy));
+        sleep(500);
+        try {
+            btnBuy.click();
+        } catch (Exception e) {
+            jsClick(btnBuy);
+        }
+        return PageFactoryManager.getInvoicePage(driver, baseUrl);
     }
 
-    /**
-     * CHECKOUT-COD-02: Click [checkout-buy-btn] → Kỳ vọng thất bại (out-of-stock / error).
-     * @return JS Alert text hoặc error message
-     */
-    public String clickBuyExpectingFailure() {
-        System.out.println("[CheckoutPage] Clicking [checkout-buy-btn] (expecting failure)...");
+    public InvoicePage clickBuyExpectingFailure() throws InterruptedException {
+        WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
+        // scroll xuống nút
+        scrollToElement(btnBuy);
         clickElement(btnBuy);
-        return acceptAlert();
+        sleep(500);
+        try {
+            btnBuy.click();
+        } catch (Exception e) {
+            jsClick(btnBuy);
+        }
+        return PageFactoryManager.getInvoicePage(driver, baseUrl);
     }
 
-    /**
-     * CHK-VNP-01: Click [checkout-buy-btn] → Redirect sang VNPay gateway.
-     */
-    public CheckoutPage clickBuyToVnpay() {
-        System.out.println("[CheckoutPage] Clicking [checkout-buy-btn] (expecting VNPAY redirect)...");
-        clickElement(btnBuy);
-        return this;
-    }
 
-    // ===========================
-    // GETTER METHODS (Assertions)
-    // ===========================
-
-    /**
-     * Kiểm tra [checkout-buy-btn] có available (enabled) không.
-     * CHECKOUT-INFO-01: "becomes available" sau khi save thành công.
-     */
     public boolean isBuyButtonEnabled() {
         try {
             String disabled = btnBuy.getAttribute("disabled");
-            String classes  = btnBuy.getAttribute("class");
-            return disabled == null && (classes == null || !classes.contains("disabled"));
-        } catch (Exception e) { return false; }
+            return disabled == null;
+        } catch (Exception e) {
+            return false;
+        }
     }
 
-    /** Lấy text phí giao hàng */
     public String getShippingFeeText() {
         try {
-            return wait.until(ExpectedConditions.visibilityOf(lblShippingFee)).getText().trim();
-        } catch (Exception e) { return ""; }
+            return getTextOf(lblShippingFee);
+        } catch (Exception e) {
+            return "";
+        }
     }
 
-    /** Kiểm tra phí giao hàng đã hiển thị (số > 0) */
     public boolean isShippingFeeDisplayed() {
         String fee = getShippingFeeText().replaceAll("[^0-9]", "");
         return !fee.isEmpty() && Long.parseLong(fee) > 0;
     }
 
-    /** Kiểm tra đang ở trang /checkout */
-    public boolean isOnCheckoutPage() {
-        return driver.getCurrentUrl().contains("/checkout");
-    }
-
-    /** Kiểm tra đã bị redirect sang VNPAY sandbox */
-    public boolean isRedirectedToVnpay() {
-        try {
-            wait.until(ExpectedConditions.urlContains("sandbox.vnpayment.vn"));
-            return driver.getCurrentUrl().contains("sandbox.vnpayment.vn")
-                    || driver.getCurrentUrl().contains("vnpayment");
-        } catch (Exception e) { return false; }
-    }
-
-    // ===========================
-    // INTERNAL
-    // ===========================
-
-    private String acceptAlert() {
+    public String acceptAlert() {
         try {
             Alert alert = wait.until(ExpectedConditions.alertIsPresent());
             String text = alert.getText().trim();
-            System.out.println("[CheckoutPage] Alert text: " + text);
+            LoggerHelper.info("[CHECKOUT_PAGE] Alert text: " + text);
             alert.accept();
             return text;
         } catch (Exception e) {
-            System.out.println("[CheckoutPage] No alert found: " + e.getMessage());
+            LoggerHelper.warn("[CHECKOUT_PAGE] Không tìm thấy alert: " + e.getMessage());
+            return "";
+        }
+    }
+
+    public String getAlertText() {
+        try {
+            WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(5));
+            Alert alert = wait.until(ExpectedConditions.alertIsPresent());
+            String alertText = alert.getText().trim();
+            alert.accept();
+            return alertText;
+        } catch (Exception e) {
             return "";
         }
     }

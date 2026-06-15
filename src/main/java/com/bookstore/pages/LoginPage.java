@@ -29,8 +29,6 @@ public class LoginPage extends BasePage{
     @FindBy(css = "[data-testid='link-to-signup']")
     private WebElement lnkToSignup;
 
-    @FindBy(css = "[data-testid='link-to-forgot-password']")
-    private WebElement lnkToForgotPassword;
 
     public LoginPage(WebDriver driver, String baseUrl) {
         super(driver, baseUrl);
@@ -80,18 +78,8 @@ public class LoginPage extends BasePage{
                 .clickLoginAsAdmin();
     }
 
-    public SignupPage clickLinkToSignup() {
-        clickElement(lnkToSignup);
-        return new SignupPage(driver, baseUrl);
-    }
-
-    public ForgotPasswordPage clickLinkToForgotPassword() {
-        clickElement(lnkToForgotPassword);
-        return new ForgotPasswordPage(driver, baseUrl);
-    }
-
     public String getErrorMessage() {
-        return wait.until(ExpectedConditions.visibilityOf(lblErrorMessage)).getText().trim();
+        return getTextOf(lblErrorMessage);
     }
 
     public boolean isOnLoginPage() {

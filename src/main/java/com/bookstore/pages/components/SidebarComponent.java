@@ -1,139 +1,94 @@
 package com.bookstore.pages.components;
 
-import org.openqa.selenium.By;
+import com.bookstore.pages.BasePage;
+import com.bookstore.utils.LoggerHelper;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.FindBy;
-import org.openqa.selenium.support.PageFactory;
-import org.openqa.selenium.support.ui.ExpectedConditions;
-import org.openqa.selenium.support.ui.WebDriverWait;
 
-import java.time.Duration;
-import java.util.List;
+public class SidebarComponent extends BasePage {
+    @FindBy(css = "[data-testid='sidebar-dashboard']")
+    private WebElement menuDashboard;
 
-import static com.bookstore.pages.BasePage.EXPLICIT_WAIT_SECONDS;
+    @FindBy(css = "[data-testid='sidebar-users']")
+    private WebElement menuUsers;
 
-public class SidebarComponent {
-    private final WebDriver driver;
-    private final WebDriverWait wait;
-//
-//    @FindBy(css = "[data-testid='sidebar-dashboard']")
-//    private WebElement itemDashboard;
-//
-//    @FindBy(css = "[data-testid='sidebar-users']")
-//    private WebElement itemUsers;
-//
-//    @FindBy(css = "[data-testid='sidebar-orders']")
-//    private WebElement itemOrders;
-//
-//    @FindBy(css = "[data-testid='sidebar-categories']")
-//    private WebElement itemCategories;
-//
-//    @FindBy(css = "[data-testid='sidebar-products']")
-//    private WebElement itemProducts;
-//
-//    @FindBy(css = "[data-testid='sidebar-suppliers']")
-//    private WebElement itemSuppliers;
-//
-//    @FindBy(css = "[data-testid='sidebar-discounts']")
-//    private WebElement itemDiscounts;
-//
-//    @FindBy(css = "[data-testid='sidebar-admins']")
-//    private WebElement itemAdmins;
-//
-//    @FindBy(css = "[data-testid='sidebar-settings']")
-//    private WebElement itemSettings;
+    @FindBy(css = "[data-testid='sidebar-orders']")
+    private WebElement menuOrders;
 
-    public SidebarComponent(WebDriver driver) {
-        this.driver = driver;
-        this.wait = new WebDriverWait(driver, Duration.ofSeconds(EXPLICIT_WAIT_SECONDS));
-        PageFactory.initElements(driver, this);
+    @FindBy(css = "[data-testid='sidebar-categories']")
+    private WebElement menuCategories;
+
+    @FindBy(css = "[data-testid='sidebar-products']")
+    private WebElement menuProducts;
+
+    @FindBy(css = "[data-testid='sidebar-suppliers']")
+    private WebElement menuSuppliers;
+
+    @FindBy(css = "[data-testid='sidebar-discounts']")
+    private WebElement menuDiscounts;
+
+    @FindBy(css = "[data-testid='sidebar-admins']")
+    private WebElement menuAdmins;
+
+    @FindBy(css = "[data-testid='sidebar-settings']")
+    private WebElement menuSettings;
+
+    public SidebarComponent(WebDriver driver, String baseUrl) {
+        super(driver, baseUrl);
     }
 
-    private boolean isElementVisible(String dataTestId) {
+    private boolean isElementDisplayed(WebElement element) {
         try {
-            By locator = By.cssSelector("[data-testid='" + dataTestId + "']");
-            WebElement element = wait.until(ExpectedConditions.visibilityOfElementLocated(locator));
+            isElementVisible(element);
             return element.isDisplayed();
         } catch (Exception e) {
             return false;
         }
     }
 
-    private boolean isElementHidden(String dataTestId) {
-        try {
-            driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(0));
-            List<WebElement> elements = driver.findElements(By.cssSelector("[data-testid='" + dataTestId + "']"));
-
-            // Nếu danh sách trống trơn -> Thymeleaf xóa thành công -> Trả về true (Ẩn đúng mong đợi)
-            boolean isHidden = elements.isEmpty();
-
-            // Khôi phục lại cấu hình đợi mặc định cho hệ thống
-            driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(EXPLICIT_WAIT_SECONDS));
-            return isHidden;
-        } catch (Exception e) {
-            driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(EXPLICIT_WAIT_SECONDS));
-            return true;
-        }
-    }
-
     public boolean isDashboardVisible() {
-        return isElementVisible("sidebar-dashboard");
+        LoggerHelper.info("[ADMIN][SIDEBAR] Kiểm tra menu Dashboard hiển thị");
+        return isElementDisplayed(menuDashboard);
     }
 
     public boolean isUsersVisible() {
-        return isElementVisible("sidebar-users");
+        LoggerHelper.info("[ADMIN][SIDEBAR] Kiểm tra menu Users hiển thị");
+        return isElementDisplayed(menuUsers);
     }
 
     public boolean isOrdersVisible() {
-        return isElementVisible("sidebar-orders");
+        LoggerHelper.info("[ADMIN][SIDEBAR] Kiểm tra menu Orders hiển thị");
+        return isElementDisplayed(menuOrders);
     }
 
     public boolean isCategoriesVisible() {
-        return isElementVisible("sidebar-categories");
+        LoggerHelper.info("[ADMIN][SIDEBAR] Kiểm tra menu Categories hiển thị");
+        return isElementDisplayed(menuCategories);
     }
 
     public boolean isProductsVisible() {
-        return isElementVisible("sidebar-products");
+        LoggerHelper.info("[ADMIN][SIDEBAR] Kiểm tra menu Products hiển thị");
+        return isElementDisplayed(menuProducts);
     }
 
     public boolean isSuppliersVisible() {
-        return isElementVisible("sidebar-suppliers");
+        LoggerHelper.info("[ADMIN][SIDEBAR] Kiểm tra menu Suppliers hiển thị");
+        return isElementDisplayed(menuSuppliers);
     }
 
     public boolean isDiscountsVisible() {
-        return isElementVisible("sidebar-discounts");
+        LoggerHelper.info("[ADMIN][SIDEBAR] Kiểm tra menu Discounts hiển thị");
+        return isElementDisplayed(menuDiscounts);
     }
 
     public boolean isAdminsVisible() {
-        return isElementVisible("sidebar-admins");
+        LoggerHelper.info("[ADMIN][SIDEBAR] Kiểm tra menu Admins hiển thị");
+        return isElementDisplayed(menuAdmins);
     }
 
     public boolean isSettingsVisible() {
-        return isElementVisible("sidebar-settings");
-    }
-
-    public boolean isUsersHidden() {
-        return isElementHidden("sidebar-users");
-    }
-
-    public boolean isCategoriesHidden() {
-        return isElementHidden("sidebar-categories");
-    }
-
-    public boolean isProductsHidden() {
-        return isElementHidden("sidebar-products");
-    }
-
-    public boolean isSuppliersHidden() {
-        return isElementHidden("sidebar-suppliers");
-    }
-
-    public boolean isDiscountsHidden() {
-        return isElementHidden("sidebar-discounts");
-    }
-
-    public boolean isAdminsHidden() {
-        return isElementHidden("sidebar-admins");
+        LoggerHelper.info("[ADMIN][SIDEBAR] Kiểm tra menu Settings hiển thị");
+        return isElementDisplayed(menuSettings);
     }
 }

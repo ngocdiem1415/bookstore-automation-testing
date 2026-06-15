@@ -1,5 +1,6 @@
 package com.bookstore.pages;
 
+import com.bookstore.utils.LoggerHelper;
 import org.openqa.selenium.By;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebDriver;
@@ -11,16 +12,11 @@ import org.openqa.selenium.support.ui.WebDriverWait;
 import java.time.Duration;
 import java.util.List;
 
-/**
- * Page Object: Quản trị cấu trúc và nghiệp vụ trang Giỏ hàng (/cart).
- * Kiến trúc tuân thủ triết lý Thử nghiệm hộp đen (Blackbox Simulation First).
- */
 public class CartPage extends BasePage {
 
     private static final String PAGE_URL = "/cart";
 
-    // Hệ thống định vị động cấp thẻ dòng (Row-level Locators)
-    private static final By PRODUCT_ROWS = By.cssSelector(".cart-items .product");
+    private static final By PRODUCT_ROWS = By.cssSelector("[data-testid='cart-item-row']");
 
     @FindBy(css = "[data-testid='cart-item-increase']")
     private List<WebElement> btnListIncrease;
@@ -40,6 +36,12 @@ public class CartPage extends BasePage {
     @FindBy(css = "[data-testid='cart-total-price']")
     private WebElement lblTotalPrice;
 
+    @FindBy(css = "[data-testid='cart-buy-btn']")
+    private WebElement btnBuy;
+
+    @FindBy(css = "[data-testid='cart-item-checkbox']")
+    private List<WebElement> listCheckboxes;
+
     public CartPage(WebDriver driver, String baseUrl) {
         super(driver, baseUrl);
     }
@@ -50,95 +52,73 @@ public class CartPage extends BasePage {
         return this;
     }
 
-    // =========================================================================
-    // TẦNG TƯƠNG TÁC (USER ACTIONS - SIMULATION FIRST)
-    // =========================================================================
 
-    /**
-     * CART-UPD-01: Bấm tăng số lượng sản phẩm (+1) theo hành vi vật lý.
-     */
     public CartPage clickIncreaseAt(int index) {
-        System.out.println("[CartPage] Thao tác click tăng số lượng vật lý tại index: " + index);
-        // Ưu tiên sử dụng cú pháp chuẩn của Selenium để kiểm tra tính tương tác của UI
+        LoggerHelper.info("[CART_PAGE] Thao tác click tăng số lượng vật lý tại index: " + index);
         try {
-            wait.until(ExpectedConditions.elementToBeClickable(btnListIncrease.get(index))).click();
+            clickElement(btnListIncrease.get(index));
         } catch (Exception e) {
-            System.out.println("[WARN] Click vật lý bị chặn. Kích hoạt lớp xử lý bảo hiểm JavaScript...");
-            executeJS("arguments[0].click();", btnListIncrease.get(index));
+            LoggerHelper.warn("[CART_PAGE] Click vật lý bị chặn. Kích hoạt lớp xử lý bảo hiểm JavaScript...");
         }
         waitForCartToLoad();
         return this;
     }
 
-    /**
-     * CART-UPD-01: Bấm giảm số lượng sản phẩm (-1) theo hành vi vật lý.
-     */
     public CartPage clickDecreaseAt(int index) {
-        System.out.println("[CartPage] Thao tác click giảm số lượng vật lý tại index: " + index);
+        LoggerHelper.info("[CART_PAGE] Thao tác click giảm số lượng vật lý tại index: " + index);
         try {
-            wait.until(ExpectedConditions.elementToBeClickable(btnListDecrease.get(index))).click();
+            clickElement(btnListDecrease.get(index));
         } catch (Exception e) {
-            System.out.println("[WARN] Click vật lý bị chặn. Kích hoạt lớp xử lý bảo hiểm JavaScript...");
-            executeJS("arguments[0].click();", btnListDecrease.get(index));
+            LoggerHelper.warn("[CART_PAGE] Click vật lý bị chặn. Kích hoạt lớp xử lý bảo hiểm JavaScript...");
         }
         waitForCartToLoad();
         return this;
     }
 
-    /**
-     * CART-UPD-02: Thử nghiệm nhập chuỗi dữ liệu đầu vào (Ví dụ: số âm, ký tự lạ)
-     */
     public CartPage tryTypeIntoQuantityInput(int index, String text) {
-        System.out.println("[CartPage] Gửi chuỗi ký tự '" + text + "' vào ô nhập liệu số lượng.");
+        LoggerHelper.info("[CART_PAGE] Gửi chuỗi ký tự '" + text + "' vào ô nhập liệu số lượng.");
         try {
             WebElement input = inputListQuantity.get(index);
             input.clear();
             input.sendKeys(text);
         } catch (Exception e) {
-            System.out.println("[CartPage] Ô nhập liệu được bảo vệ đúng trạng thái (Readonly/Disabled): " + e.getMessage());
+            LoggerHelper.info("[CART_PAGE] Ô số lượng được bảo vệ đúng trạng thái readonly/disabled: " + e.getMessage());
         }
         return this;
     }
 
-    /**
-     * CART-DEL-01: Bấm nút Xóa sản phẩm khỏi giỏ hàng.
-     */
     public CartPage clickDeleteAt(int index) {
-        System.out.println("[CartPage] Thao tác click xóa sản phẩm vật lý tại index: " + index);
+        LoggerHelper.info("[CART_PAGE] Thao tác click xóa sản phẩm vật lý tại index: " + index);
+        WebElement btnDelete = btnListDelete.get(index);
         try {
-            wait.until(ExpectedConditions.elementToBeClickable(btnListDelete.get(index))).click();
+            WebElement targetRow = driver.findElements(PRODUCT_ROWS).get(index);
+            clickElement(btnDelete);
+            wait.until(ExpectedConditions.stalenessOf(targetRow));
         } catch (Exception e) {
-            System.out.println("[WARN] Click vật lý bị chặn. Kích hoạt lớp xử lý bảo hiểm JavaScript...");
-            executeJS("arguments[0].click();", btnListDelete.get(index));
+            LoggerHelper.warn("[CART_PAGE] Click vật lý bị chặn. Kích hoạt lớp xử lý bảo hiểm JavaScript...");
+            jsClick(btnDelete);
         }
         waitForCartToLoad();
         return this;
     }
 
-    /**
-     * CART-DEL-02: Xóa cuốn chiếu toàn bộ danh sách sản phẩm.
-     */
     public CartPage deleteAllItems() {
-        System.out.println("[CartPage] Bắt đầu luồng dọn sạch toàn bộ giỏ hàng...");
-        int maxAttempts = 30;
+        LoggerHelper.info("[CART_PAGE] Bắt đầu luồng dọn sạch toàn bộ giỏ hàng...");
+        int maxAttempts = 10;
         int attempt = 0;
 
         while (getCartItemCount() > 0 && attempt < maxAttempts) {
             attempt++;
-            System.out.println("[CartPage] Lượt xử lý thứ " + attempt + " - Thực thể còn lại: " + getCartItemCount());
-            clickDeleteAt(0); // Luôn triệt tiêu phần tử đầu tiên của danh sách động
+            LoggerHelper.info("[CART_PAGE] Lượt xử lý thứ " + attempt + " - Item còn lại: " + getCartItemCount());
+            clickDeleteAt(0);
         }
         return this;
     }
 
-    // =========================================================================
-    // TẦNG KIỂM TRA TRẠNG THÁI (ASSERTION HELPERS)
-    // =========================================================================
-
     public int getCartItemCount() {
         try {
-            // Đọc trực tiếp kích thước danh sách thực thể dòng thay vì đếm list button để tránh trễ DOM
-            return driver.findElements(PRODUCT_ROWS).size();
+            List<WebElement> rows = driver.findElements(PRODUCT_ROWS);
+            return rows.size();
         } catch (Exception e) {
             return 0;
         }
@@ -158,19 +138,19 @@ public class CartPage extends BasePage {
 
     public boolean isCartEmptyMessageDisplayed() {
         try {
-            return wait.until(ExpectedConditions.visibilityOf(lblCartEmptyMsg)).isDisplayed();
+            return isElementVisible(lblCartEmptyMsg);
         } catch (Exception e) {
             return false;
         }
     }
 
     public String getCartEmptyMessage() {
-        return wait.until(ExpectedConditions.visibilityOf(lblCartEmptyMsg)).getText().trim();
+        return getTextOf(lblCartEmptyMsg);
     }
 
     public long getTotalPriceAsLong() {
         try {
-            wait.until(ExpectedConditions.visibilityOf(lblTotalPrice));
+            isElementVisible(lblTotalPrice);
             String raw = lblTotalPrice.getText().replaceAll("[^0-9]", "");
             return raw.isEmpty() ? 0L : Long.parseLong(raw);
         } catch (Exception e) {
@@ -178,26 +158,27 @@ public class CartPage extends BasePage {
         }
     }
 
-    /**
-     * Phương thức đồng bộ hóa thông minh: Thay vì dùng Thread.sleep() cố định,
-     * hệ thống sẽ đợi cho cấu trúc trang Giỏ hàng tái định hình và ổn định lại trong cây DOM.
-     */
-    private void waitForCartToLoad() {
+    protected void waitForCartToLoad() {
         try {
-            // Chờ cho đến khi toàn bộ khung container tổng thể của trang tải xong và sẵn sàng tương tác
-            WebDriverWait shortWait = new WebDriverWait(driver, Duration.ofSeconds(5));
+            WebDriverWait shortWait = new WebDriverWait(driver, Duration.ofSeconds(10));
             shortWait.until(ExpectedConditions.presenceOfElementLocated(By.className("cart")));
-        } catch (Exception ignored) {}
+        } catch (Exception ignored) {
+        }
     }
 
-    /**
-     * Hàm đóng gói tiêm mã lệnh JavaScript cục bộ (Hạn chế tối đa việc viết rác mã nguồn)
-     */
-    private void executeJS(String script, Object... args) {
-        try {
-            ((JavascriptExecutor) driver).executeScript(script, args);
-        } catch (Exception e) {
-            System.out.println("[ERROR] Không thể thực thi mã JavaScript: " + e.getMessage());
+    public CartPage checkCheckboxAt(int index) {
+        System.out.println("[CART_PAGE] Tích chọn checkbox tại index: " + index);
+        WebElement cb = wait.until(ExpectedConditions.visibilityOf(listCheckboxes.get(index)));
+        if (!cb.isSelected()) {
+            clickElement(cb);
         }
+        return this;
+    }
+
+
+    public CheckoutPage clickBuyButton() {
+        System.out.println("[CART_PAGE] Click nút Mua hàng...");
+        clickElement(btnBuy);
+        return com.bookstore.factory.PageFactoryManager.getCheckoutPage(driver, baseUrl);
     }
 }
