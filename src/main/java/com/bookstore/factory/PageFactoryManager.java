@@ -56,8 +56,8 @@ public class PageFactoryManager {
         return new InvoicePage(driver, baseUrl);
     }
 
-    public static OrderHistoryPage getOrderHistoryPage(WebDriver driver, String baseUrl) {
-        return new OrderHistoryPage(driver, baseUrl);
+    public static InvoiceDetailPage getInvoiceDetailPage(WebDriver driver, String baseUrl) {
+        return new InvoiceDetailPage(driver, baseUrl);
     }
 
     public static AdminOrderEditPage getAdminOrderEditPage(WebDriver driver, String baseUrl) {

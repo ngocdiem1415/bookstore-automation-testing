@@ -148,6 +148,47 @@ public class AdminCategoryPage extends BasePage {
         }
     }
 
+    public int findCategoryIndexByName(String name) {
+        LoggerHelper.info("[ADMIN][CATEGORY_PAGE] Tìm danh mục theo tên: " + name);
+
+        try {
+            for (int i = 0; i < tableRows.size(); i++) {
+                String rowText = tableRows.get(i).getText().trim();
+                LoggerHelper.info("[ADMIN][CATEGORY_PAGE] Index " + i + " | Row = " + rowText);
+
+                if (rowText.contains(name)) {
+                    LoggerHelper.info("[ADMIN][CATEGORY_PAGE] Tìm thấy danh mục tại index: " + i);
+                    return i;
+                }
+            }
+        } catch (Exception e) {
+            LoggerHelper.warn("[ADMIN][CATEGORY_PAGE] Không tìm được danh mục: " + e.getMessage());
+        }
+
+        LoggerHelper.warn("[ADMIN][CATEGORY_PAGE] Không tìm thấy danh mục: " + name);
+        return -1;
+    }
+
+    public AdminCategoryPage clickDeleteAt(int index) {
+        LoggerHelper.info("[ADMIN][CATEGORY_PAGE] Click xóa danh mục tại index: " + index);
+        clickElement(btnDeleteRows.get(index));
+        try {
+            Alert alert = wait.until(ExpectedConditions.alertIsPresent());
+            LoggerHelper.info("[ADMIN][CATEGORY_PAGE] Xác nhận alert xóa danh mục: " + alert.getText());
+            alert.accept();
+        } catch (Exception ignored) {
+        }
+        return this;
+    }
+
+    public AdminCategoryPage clickDeleteByName(String name) {
+        int index = findCategoryIndexByName(name);
+        if (index < 0) {
+            throw new NoSuchElementException("Cannot find category to delete: " + name);
+        }
+        return clickDeleteAt(index);
+    }
+
     public boolean isNoServerError() {
         LoggerHelper.info("[ADMIN][CATEGORY_PAGE] Kiểm tra trang không bị lỗi server");
 

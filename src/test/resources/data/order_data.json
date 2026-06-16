@@ -18,36 +18,13 @@
   },
   {
     "type": "ORD_CAN_03",
-    "quantity": 2,
-    "USER_B_ORDER_ID": "230",
-    "name": "Nguyễn Thị Diễm",
-    "phone": "0987654321",
-    "address": "123 Đường Lê Lợi",
-    "city": "Hồ Chí Minh",
-    "district": "Quận 1",
-    "ward": "Phường Bến Nghé"
-  },
-  {
-    "type": "ORD_REV_01",
+    "quantity": "2",
     "name": "Nguyễn Thị Diễm",
     "phone": "0987654321",
     "address": "123 Đường Lê Lợi",
     "city": "Hồ Chí Minh",
     "district": "Quận 1",
     "ward": "Phường Bến Nghé",
-    "paymentMethod": "Thanh toán khi nhận hàng (COD)",
-    "feedback": "Sản phẩm đóng gói rất cẩn thận, sách chất lượng tốt, giao hàng cực nhanh!"
-  },
-  {
-    "type": "ORD_REV_03",
-    "name": "Nguyễn Thị Diễm",
-    "phone": "0987654321",
-    "address": "123 Đường Lê Lợi",
-    "city": "Hồ Chí Minh",
-    "district": "Quận 1",
-    "ward": "Phường Bến Nghé",
-    "paymentMethod": "Thanh toán khi nhận hàng (COD)",
-    "star": "4",
-    "feedback": ""
+    "paymentMethod": "Thanh toán khi nhận hàng (COD)"
   }
 ]

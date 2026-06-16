@@ -2,6 +2,7 @@ package com.bookstore.tests.cart;
 
 import com.bookstore.base.BaseSetup;
 import com.bookstore.factory.PageFactoryManager;
+import com.bookstore.helpers.CleanupHelper;
 import com.bookstore.pages.CartPage;
 import com.bookstore.pages.LoginPage;
 import com.bookstore.pages.ProductDetailPage;
@@ -9,8 +10,14 @@ import com.bookstore.pages.ProductListPage;
 import com.bookstore.utils.DataHelper;
 import com.bookstore.utils.LoggerHelper;
 import org.testng.Assert;
+import org.testng.annotations.AfterMethod;
 
 public abstract class CartBaseTest extends BaseSetup {
+    @AfterMethod(alwaysRun = true)
+    public void cleanupCartData() {
+        CleanupHelper.cleanupCustomerCart(getDriver(), baseUrl);
+    }
+
     protected void loginAsCustomer() {
         LoggerHelper.info("[CART][BASE] Đăng nhập bằng tài khoản CUSTOMER");
         LoginPage loginPage = PageFactoryManager.getLoginPage(getDriver(), baseUrl);
@@ -55,6 +62,8 @@ public abstract class CartBaseTest extends BaseSetup {
 
         LoggerHelper.info("[CART][BASE] Thêm sản phẩm [" + 0 + "] vào giỏ hàng thành công");
         detailPage.clickAddToCart();
+        String alertText = detailPage.getSuccessMessage();
+        LoggerHelper.info("[CART][BASE] Thông báo thực tế: " + alertText);
         LoggerHelper.info("[CART][BASE] Chuyển hướng đến trang giỏ hàng /cart");
         cartPage.open();
 

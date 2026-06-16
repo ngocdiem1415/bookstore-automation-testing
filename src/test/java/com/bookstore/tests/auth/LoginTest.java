@@ -16,7 +16,7 @@ import org.testng.annotations.Test;
 import java.util.Map;
 
 public class LoginTest extends BaseSetup {
-    @Test(priority = 1, description = "AUTH-LOG-01: Login successful with CUSTOMER role.")
+    @Test(priority = 1, description = "AUTH-LOG-01: Kiểm thử đăng nhập với tài khoản CUSTOMER.")
     public void AUTH_LOG_01_LoginSuccessCustomer() {
         LoggerHelper.info("[AUTH][LOGIN] Bắt đầu kiểm thử đăng nhập với tài khoản CUSTOMER");
         LoginPage loginPage = PageFactoryManager.getLoginPage(driver, baseUrl);
@@ -53,7 +53,7 @@ public class LoginTest extends BaseSetup {
             priority = 2,
             dataProvider = "GlobalJsonFeeder",
             dataProviderClass = JsonDataProvider.class,
-            description = "AUTH-LOG-02: Login successful with ADMIN role."
+            description = "AUTH-LOG-02: Kiểm thử đăng nhập với tài khoản ADMIN."
     )
     public void AUTH_LOG_02_LoginSuccessAdmin(Map<String, String> data) {
         LoggerHelper.info("[AUTH][LOGIN] Bắt đầu kiểm thử đăng nhập với tài khoản ADMIN");
@@ -95,7 +95,7 @@ public class LoginTest extends BaseSetup {
             priority = 3,
             dataProvider = "GlobalJsonFeeder",
             dataProviderClass = JsonDataProvider.class,
-            description = "AUTH-LOG-03: Login failed due to invalid password."
+            description = "AUTH-LOG-03: Lkiểm thử đăng nhập thất bại kho nhập sai mật khẩu."
     )
     public void AUTH_LOG_03_LoginFailInvalidPassword(Map<String, String> data) {
         LoggerHelper.info("[AUTH][LOGIN] Bắt đầu kiểm thử đăng nhập thất bại do sai mật khẩu");
@@ -129,7 +129,7 @@ public class LoginTest extends BaseSetup {
             priority = 4,
             dataProvider = "GlobalJsonFeeder",
             dataProviderClass = JsonDataProvider.class,
-            description = "AUTH-LOG-04: Verify system prevents login when SQL Injection is attempted via Username."
+            description = "AUTH-LOG-04: Kiểm thử chống SQL Injection ở màn hình đăng nhập."
     )
     public void AUTH_LOG_04_LoginFailSQLInjection(Map<String, String> data) {
         LoggerHelper.info("[AUTH][LOGIN] Bắt đầu kiểm thử chống SQL Injection ở màn hình đăng nhập");
@@ -174,7 +174,7 @@ public class LoginTest extends BaseSetup {
         LoggerHelper.info("[AUTH][LOGIN] Hệ thống xử lý SQL Injection an toàn");
     }
 
-    @Test(priority = 5, description = "AUTH-OUT-01: Logout successful.")
+    @Test(priority = 5, description = "AUTH-OUT-01: Kiểm thử đăng xuất.")
     public void AUTH_OUT_01_LogoutSuccess() {
         LoggerHelper.info("[AUTH][LOGOUT] Bắt đầu kiểm thử đăng xuất");
 

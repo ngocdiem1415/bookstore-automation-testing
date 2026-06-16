@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
-<!-- Suite: Admin Module | mvn test -Dsurefire.suiteXmlFiles=testng-admin.xml -->
+
 <suite name="Admin Suite" verbose="1">
-    <parameter name="appURL" value="http://localhost:8080"/>
+    <!--    <parameter name="appURL" value="http://localhost:8080" />-->
     <listeners>
         <listener class-name="com.bookstore.listeners.TestListener"/>
     </listeners>
@@ -42,9 +42,9 @@
         <classes>
             <class name="com.bookstore.tests.admin.AdminProductTest">
                 <methods>
-                    <include name="ADM_PRO_01_AddProductSuccess"/>
-                    <include name="ADM_PRO_02_AddProductNegativePrice"/>
-                    <include name="ADM_PRO_03_UploadExecutableFileBoundary"/>
+                    <include name="ADM_PRD_01_AddProductSuccess"/>
+                    <include name="ADM_PRD_02_AddProductNegativePrice"/>
+                    <include name="ADM_PRD_03_UploadExecutableFileBoundary"/>
                     <include name="ADM_PRD_04_EditProductSuccess"/>
                     <include name="ADM_PRD_05_EditProductBlankTitle"/>
                     <include name="ADM_PRD_06_DeleteUnusedProduct"/>

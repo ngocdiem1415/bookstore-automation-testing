@@ -7,6 +7,6 @@
   },
   {
     "type": "AUTH_PRO_03",
-    "file_path": "\\src\\test\\resources\\data\\10MB.png"
+    "file_path": "/src/test/resources/data/10MB.png"
   }
 ]

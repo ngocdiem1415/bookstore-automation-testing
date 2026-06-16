@@ -167,6 +167,33 @@ public class AdminOrderPage extends BasePage {
         return this;
     }
 
+    public int searchByOrderId(String orderId) {
+        LoggerHelper.info("[ADMIN][ORDER_PAGE] Tìm kiếm đơn hàng theo ID: " + orderId);
+        clearAndSendText(txtSearch, orderId);
+        waitForPageLoaded();
+
+        for (int i = 0; i < orderIds.size(); i++) {
+            String actualOrderId = orderIds.get(i).getText().replaceAll("[^0-9]", "");
+            LoggerHelper.info("[ADMIN][ORDER_PAGE] Index " + i + " | Order ID = " + actualOrderId);
+
+            if (actualOrderId.equals(orderId)) {
+                LoggerHelper.info("[ADMIN][ORDER_PAGE] Tìm thấy đơn hàng ID " + orderId + " tại index " + i);
+                return i;
+            }
+        }
+
+        LoggerHelper.warn("[ADMIN][ORDER_PAGE] Không tìm thấy đơn hàng ID: " + orderId);
+        return -1;
+    }
+
+    public AdminOrderPage clickEditByOrderId(String orderId) {
+        int index = searchByOrderId(orderId);
+        if (index < 0) {
+            throw new IllegalStateException("Cannot find order to edit: " + orderId);
+        }
+        return clickEditAt(index);
+    }
+
     public boolean isOrderTableDisplayed() {
         LoggerHelper.info("[ADMIN][ORDER_PAGE] Kiểm tra bảng đơn hàng hiển thị");
 

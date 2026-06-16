@@ -1,11 +1,10 @@
 package com.bookstore.tests.checkout;
 
 import com.bookstore.factory.PageFactoryManager;
+import com.bookstore.helpers.CleanupRegistry;
 import com.bookstore.pages.CartPage;
 import com.bookstore.pages.CheckoutPage;
 import com.bookstore.pages.InvoicePage;
-import com.bookstore.pages.LoginPage;
-import com.bookstore.utils.DataHelper;
 import com.bookstore.utils.JsonDataProvider;
 import com.bookstore.utils.LoggerHelper;
 import org.testng.Assert;
@@ -32,16 +31,20 @@ public class CheckoutCodTest extends CheckoutBaseTest {
         LoggerHelper.info("[CHECKOUT][COD] Click nút đặt hàng");
         InvoicePage invoice = cp.clickBuyExpectingSuccess();
 
-        LoggerHelper.info("[CHECKOUT][COD] Mở trang hóa đơn");
-        invoice.open();
-
         LoggerHelper.info("[CHECKOUT][COD] Kiểm tra đã chuyển tới trang invoice");
         Assert.assertTrue(invoice.isOnInvoicePage(),
                 "Kỳ vọng chuyển đến trang hóa đơn /invoice. Thực tế: " + invoice.getCurrentUrl());
 
         LoggerHelper.info("[CHECKOUT][COD] Kiểm tra trạng thái đơn hàng là PENDING");
-        Assert.assertTrue(invoice.isStatusPending(),
-                "Đơn hàng COD mới đặt phải có trạng thái PENDING. Thực tế: " + invoice.getOrderStatus());
+        String status = invoice.getOrderStatusAt(0);
+        Assert.assertTrue(isPendingStatus(status),
+                "Đơn hàng COD mới đặt phải có trạng thái PENDING. Thực tế: " + status);
+
+        String orderId = invoice.getFirstOrderId();
+        if (orderId != null && !orderId.isBlank()) {
+            CleanupRegistry.adminCompleteOrderIds.add(orderId);
+            LoggerHelper.info("[CHECKOUT][COD] Đăng ký order cho admin complete: " + orderId);
+        }
 
         LoggerHelper.info("[CHECKOUT][COD] Đặt hàng COD thành công");
     }
@@ -55,7 +58,6 @@ public class CheckoutCodTest extends CheckoutBaseTest {
         LoggerHelper.info("[CHECKOUT][COD] Đăng nhập tài khoản CUSTOMER");
         loginAsCustomer();
 
-        // Xóa sạch giỏ hàng trước khi truy cập
         CartPage cart = PageFactoryManager.getCartPage(getDriver(), baseUrl);
         LoggerHelper.info("[CHECKOUT][COD] Mở trang giỏ hàng");
         cart.open();
@@ -64,7 +66,6 @@ public class CheckoutCodTest extends CheckoutBaseTest {
             cart.deleteAllItems();
         }
 
-        // Truy cập trực tiếp URL checkout
         LoggerHelper.info("[CHECKOUT][COD] Truy cập trực tiếp URL /checkout");
         getDriver().get(baseUrl + "/checkout");
 
@@ -80,5 +81,10 @@ public class CheckoutCodTest extends CheckoutBaseTest {
         Assert.assertFalse(title.contains("500") || title.contains("error"),
                 "Hệ thống không được sập lỗi 500 khi truy cập checkout với giỏ trống.");
         LoggerHelper.info("[CHECKOUT][COD] Kiểm tra không phát sinh lỗi 500");
+    }
+
+    private boolean isPendingStatus(String status) {
+        String normalized = status == null ? "" : status.toLowerCase();
+        return normalized.contains("pending") || normalized.contains("chờ");
     }
 }

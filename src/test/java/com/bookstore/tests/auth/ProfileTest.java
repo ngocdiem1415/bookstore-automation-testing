@@ -2,6 +2,9 @@ package com.bookstore.tests.auth;
 
 import com.bookstore.base.BaseSetup;
 import com.bookstore.factory.PageFactoryManager;
+import com.bookstore.helpers.CleanupRegistry;
+import com.bookstore.helpers.CleanupHelper;
+import com.bookstore.helpers.ProfileSnapshot;
 import com.bookstore.pages.LoginPage;
 import com.bookstore.pages.ProfilePage;
 import com.bookstore.pages.components.HeaderComponent;
@@ -9,6 +12,7 @@ import com.bookstore.utils.DataHelper;
 import com.bookstore.utils.JsonDataProvider;
 import com.bookstore.utils.LoggerHelper;
 import org.testng.Assert;
+import org.testng.annotations.AfterMethod;
 import org.testng.annotations.Test;
 
 import java.io.File;
@@ -39,12 +43,17 @@ public class ProfileTest extends BaseSetup {
             priority = 1,
             dataProvider = "GlobalJsonFeeder",
             dataProviderClass = JsonDataProvider.class,
-            description = "AUTH-PRO-01: Verify user can update profile details successfully."
+            description = "AUTH-PRO-01: Kiểm thử cập nhật hồ sơ thành công."
     )
     public void AUTH_PRO_01_UpdateProfileSuccess(Map<String, String> data) {
         LoggerHelper.info("[AUTH][PROFILE] Bắt đầu kiểm thử cập nhật hồ sơ thành công");
 
         ProfilePage profilePage = loginAsCustomerAndOpenProfile();
+        CleanupRegistry.profileSnapshot = new ProfileSnapshot(
+                profilePage.getPhoneValue(),
+                profilePage.getBirthdateValue(),
+                profilePage.getSelectedGenderValue()
+        );
 
         LoggerHelper.info("[AUTH][PROFILE] Nhập số điện thoại mới: " + data.get("test_phone"));
         LoggerHelper.info("[AUTH][PROFILE] Nhập ngày sinh mới: " + data.get("test_birthdate"));
@@ -67,9 +76,14 @@ public class ProfileTest extends BaseSetup {
         );
     }
 
+    @AfterMethod(alwaysRun = true)
+    public void cleanupProfileData() {
+        CleanupHelper.restoreCustomerProfile(driver, baseUrl);
+    }
+
     @Test(
             priority = 2,
-            description = "AUTH-PRO-02: Verify user cannot update profile with blank mandatory fields."
+            description = "AUTH-PRO-02: Kiểm thử cập nhật hồ sơ thiếu số điện thoại."
     )
     public void AUTH_PRO_02_UpdateProfileBlankPhone() {
         LoggerHelper.info("[AUTH][PROFILE] Bắt đầu kiểm thử cập nhật hồ sơ thiếu số điện thoại");
@@ -94,7 +108,7 @@ public class ProfileTest extends BaseSetup {
             priority = 3,
             dataProvider = "GlobalJsonFeeder",
             dataProviderClass = JsonDataProvider.class,
-            description = "AUTH-PRO-03: Verify uploading avatar exceeding size limit (Boundary)."
+            description = "AUTH-PRO-03: Kiểm thử upload avatar vượt quá dung lượng cho phép."
     )
     public void AUTH_PRO_03_UploadAvatarExceedsSizeLimit(Map<String, String> data) {
         LoggerHelper.info("[AUTH][PROFILE] Bắt đầu kiểm thử upload avatar vượt quá dung lượng cho phép");

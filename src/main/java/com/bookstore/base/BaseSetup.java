@@ -2,39 +2,35 @@ package com.bookstore.base;
 
 import com.bookstore.factory.BrowserFactory;
 import com.bookstore.utils.LoggerHelper;
-import io.github.bonigarcia.wdm.WebDriverManager;
+import lombok.Getter;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.chrome.ChromeDriver;
 import org.testng.ITestResult;
 import org.testng.annotations.*;
 
 import java.lang.reflect.Method;
-import java.time.Duration;
 
 public class BaseSetup {
+    @Getter
     protected WebDriver driver;
     protected long startTime;
+    @Getter
     protected String baseUrl;
-
-    public WebDriver getDriver() {
-        return driver;
-    }
-
-    public String getBaseUrl() {
-        return baseUrl;
-    }
 
 
     @Parameters({"browser", "appURL"})
     @BeforeClass
     public void initializeTestBaseSetup(
             @Optional("chrome") String browser,
-            @Optional("http://localhost:8080") String appURL) {
+//            @Optional("http://localhost:8080") String appURL) {
+            @Optional("http://165.245.178.123") String appURL) {
         try {
-            this.driver = BrowserFactory.getBrowser(browser);
-            this.baseUrl = appURL;
-            driver.get(appURL);
+            String runtimeBrowser = System.getProperty("browser", browser);
+            String runtimeAppUrl = System.getProperty("appURL", appURL);
+
+            this.driver = BrowserFactory.getBrowser(runtimeBrowser);
+            this.baseUrl = runtimeAppUrl;
+            driver.get(runtimeAppUrl);
         } catch (Exception e) {
             System.err.println("[Error] Cannot initialize driver: " + e.getMessage());
         }
