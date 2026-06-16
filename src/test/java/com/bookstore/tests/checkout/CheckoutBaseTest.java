@@ -2,14 +2,21 @@ package com.bookstore.tests.checkout;
 
 import com.bookstore.base.BaseSetup;
 import com.bookstore.factory.PageFactoryManager;
+import com.bookstore.helpers.CleanupHelper;
 import com.bookstore.pages.*;
 import com.bookstore.utils.DataHelper;
 import com.bookstore.utils.LoggerHelper;
 import org.testng.Assert;
+import org.testng.annotations.AfterMethod;
 
 import java.util.Map;
 
 public abstract class CheckoutBaseTest extends BaseSetup {
+    @AfterMethod(alwaysRun = true)
+    public void cleanupCheckoutCartData() {
+        CleanupHelper.cleanupCustomerCart(getDriver(), baseUrl);
+    }
+
     protected void loginAsCustomer() {
         LoggerHelper.info("[CHECKOUT][BASE] Mở trang đăng nhập");
         LoginPage loginPage = PageFactoryManager.getLoginPage(getDriver(), baseUrl);
@@ -61,6 +68,7 @@ public abstract class CheckoutBaseTest extends BaseSetup {
 
         LoggerHelper.info("[CHECKOUT][BASE] Thêm sản phẩm vào giỏ hàng");
         detailPage.clickAddToCart();
+        detailPage.getSuccessMessage();
 
         LoggerHelper.info("[CHECKOUT][BASE] Mở trang giỏ hàng");
         cartPage.open();

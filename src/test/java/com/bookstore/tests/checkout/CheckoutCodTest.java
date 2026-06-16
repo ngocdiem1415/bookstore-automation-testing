@@ -1,11 +1,10 @@
 package com.bookstore.tests.checkout;
 
 import com.bookstore.factory.PageFactoryManager;
+import com.bookstore.helpers.CleanupRegistry;
 import com.bookstore.pages.CartPage;
 import com.bookstore.pages.CheckoutPage;
-import com.bookstore.pages.InvoicePage;
-import com.bookstore.pages.LoginPage;
-import com.bookstore.utils.DataHelper;
+import com.bookstore.pages.InvoiceDetailPage;
 import com.bookstore.utils.JsonDataProvider;
 import com.bookstore.utils.LoggerHelper;
 import org.testng.Assert;
@@ -30,7 +29,7 @@ public class CheckoutCodTest extends CheckoutBaseTest {
         cp.selectPaymentMethod(data.get("paymentMethod"));
 
         LoggerHelper.info("[CHECKOUT][COD] Click nút đặt hàng");
-        InvoicePage invoice = cp.clickBuyExpectingSuccess();
+        InvoiceDetailPage invoice = cp.clickBuyExpectingSuccess();
 
         LoggerHelper.info("[CHECKOUT][COD] Mở trang hóa đơn");
         invoice.open();
@@ -42,6 +41,12 @@ public class CheckoutCodTest extends CheckoutBaseTest {
         LoggerHelper.info("[CHECKOUT][COD] Kiểm tra trạng thái đơn hàng là PENDING");
         Assert.assertTrue(invoice.isStatusPending(),
                 "Đơn hàng COD mới đặt phải có trạng thái PENDING. Thực tế: " + invoice.getOrderStatus());
+
+        String orderId = invoice.getOrderId();
+        if (orderId != null && !orderId.isBlank()) {
+            CleanupRegistry.adminCompleteOrderIds.add(orderId);
+            LoggerHelper.info("[CHECKOUT][COD] Đăng ký order cho admin complete: " + orderId);
+        }
 
         LoggerHelper.info("[CHECKOUT][COD] Đặt hàng COD thành công");
     }

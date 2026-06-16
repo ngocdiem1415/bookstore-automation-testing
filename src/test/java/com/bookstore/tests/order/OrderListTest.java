@@ -1,6 +1,6 @@
 package com.bookstore.tests.order;
 
-import com.bookstore.pages.OrderHistoryPage;
+import com.bookstore.pages.InvoicePage;
 import com.bookstore.utils.JsonDataProvider;
 import com.bookstore.utils.LoggerHelper;
 import org.testng.Assert;
@@ -16,7 +16,7 @@ public class OrderListTest extends OrderBaseTest {
     )
     public void ORD_LST_01_ViewOrderHistory() {
         LoggerHelper.info("[ORDER][LIST] Bắt đầu kiểm thử xem lịch sử đơn hàng");
-        OrderHistoryPage ordPage = loginAsCustomerAndOpenOrderHistoryPage();
+        InvoicePage ordPage = loginAsCustomerAndOpenInvoicePage();
 
         int count = ordPage.getOrderCount();
         LoggerHelper.info("[ORDER][LIST] Số lượng đơn hàng tìm thấy: " + count);
@@ -40,7 +40,7 @@ public class OrderListTest extends OrderBaseTest {
         String pass = data.get("password");
 
         LoggerHelper.info("[ORDER][LIST] Đăng nhập bằng tài khoản: " + user);
-        OrderHistoryPage ordPage = loginAsCustomerNotOrderAndOpenOrderHistoryPage(user, pass);
+        InvoicePage ordPage = loginAsCustomerNotOrderAndOpenInvoicePage(user, pass);
 
         boolean isEmpty = ordPage.isEmptyMessageDisplayed();
         LoggerHelper.info("[ORDER][LIST] Trạng thái hiển thị empty message: " + isEmpty);
@@ -60,14 +60,16 @@ public class OrderListTest extends OrderBaseTest {
 
     @Test(
             priority = 3,
+            dataProvider = "GlobalJsonFeeder",
+            dataProviderClass = JsonDataProvider.class,
             description = "ORD-LST-03: Tìm kiếm đơn hàng theo tên sản phẩm"
     )
-    public void ORD_LST_03_SearchOrderByProductName() {
+    public void ORD_LST_03_SearchOrderByProductName(Map<String, String> data) {
         LoggerHelper.info("[ORDER][LIST] Bắt đầu kiểm thử tìm kiếm đơn hàng theo tên sản phẩm");
 
-        OrderHistoryPage ordPage = loginAsCustomerAndOpenOrderHistoryPage();
+        InvoicePage ordPage = loginAsCustomerAndOpenInvoicePage();
 
-        String keywordEmpty = "NonExistentBookName9999";
+        String keywordEmpty = data.get("keyword");
         LoggerHelper.info("[ORDER][LIST] Tìm kiếm với từ khóa không tồn tại: " + keywordEmpty);
 
         ordPage.searchOrder(keywordEmpty);

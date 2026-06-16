@@ -12,13 +12,7 @@ import org.testng.annotations.Test;
 
 import java.util.Map;
 
-/**
- * Test Suite: Checkout Shipping Information (CHECKOUT-INFO)
- * Kiểm thử điền thông tin giao hàng:
- * - CHECKOUT-INFO-01: Điền thông tin giao hàng hợp lệ thành công.
- * - CHECKOUT-INFO-02: Để trống trường bắt buộc (Ward) -> hệ thống chặn.
- * - CHECKOUT-INFO-03: Kiểm thử bảo mật XSS trong địa chỉ giao hàng.
- */
+
 public class CheckoutInfoTest extends CheckoutBaseTest {
 
     @Test(

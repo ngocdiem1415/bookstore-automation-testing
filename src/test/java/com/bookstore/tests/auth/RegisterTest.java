@@ -2,11 +2,14 @@ package com.bookstore.tests.auth;
 
 import com.bookstore.base.BaseSetup;
 import com.bookstore.factory.PageFactoryManager;
+import com.bookstore.helpers.CleanupRegistry;
+import com.bookstore.helpers.CleanupHelper;
 import com.bookstore.pages.SignupPage;
 import com.bookstore.utils.DataHelper;
 import com.bookstore.utils.JsonDataProvider;
 import com.bookstore.utils.LoggerHelper;
 import org.testng.Assert;
+import org.testng.annotations.AfterMethod;
 import org.testng.annotations.Test;
 
 import java.util.Map;
@@ -30,9 +33,10 @@ public class RegisterTest extends BaseSetup {
     )
     public void AUTH_REG_01_RegistrationAndVerifySuccess() {
         String suffix = String.valueOf(System.currentTimeMillis()).substring(8);
-        String randomUser = "tester" + suffix;
-        String randomEmail = "diem" + suffix + "@gmail.com";
+        String randomUser = "auto_reg_" + suffix;
+        String randomEmail = "auto_reg_" + suffix + "@gmail.com";
         String randomPhone = generateRandomPhoneNumber();
+        CleanupRegistry.createdUsers.add(randomUser);
 
         SignupPage signupPage = PageFactoryManager.getSignupPage(driver, baseUrl);
         LoggerHelper.info("[AUTH][REGISTER] Mở trang đăng ký");
@@ -49,7 +53,7 @@ public class RegisterTest extends BaseSetup {
         );
         LoggerHelper.info("[AUTH][REGISTER] Click nút đăng ký");
         signupPage.clickSubmitExpectingSuccess();
-        String alert = signupPage.getMessageAndAccept();
+        String alert = signupPage.getMessage();
         Assert.assertTrue(alert.contains("Đăng ký thành công! Vui lòng kiểm tra email để xác nhận tài khoản"),
                 "Lỗi: Hệ thống không hiển thị thông báo đăng kí thành công sau khi gửi thông tin hợp lệ!");
         LoggerHelper.info("[AUTH][REGISTER] Thông báo đăng kí thành công");
@@ -65,6 +69,11 @@ public class RegisterTest extends BaseSetup {
         LoggerHelper.info("[AUTH][REGISTER] Kiểm tra đăng ký thành công");
         Assert.assertTrue(signupPage.isRedirectedToSuccess(),
                 "Lỗi: Không chuyển hướng về trang /success sau khi xác thực OTP thành công.");
+    }
+
+    @AfterMethod(alwaysRun = true)
+    public void cleanupRegisterData() {
+        CleanupHelper.cleanupCreatedUsers(driver, baseUrl);
     }
 
     @Test(

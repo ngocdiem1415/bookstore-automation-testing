@@ -2,7 +2,7 @@
 <!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
 
 <suite name="Order Module Suite" verbose="1">
-    <parameter name="appURL" value="http://localhost:8080" />
+<!--    <parameter name="appURL" value="http://localhost:8080" />-->
     <listeners>
         <listener class-name="com.bookstore.listeners.TestListener" />
     </listeners>

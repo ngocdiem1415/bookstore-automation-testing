@@ -2,16 +2,20 @@ package com.bookstore.tests.order;
 
 import com.bookstore.base.BaseSetup;
 import com.bookstore.factory.PageFactoryManager;
+import com.bookstore.helpers.CleanupHelper;
 import com.bookstore.pages.*;
 import com.bookstore.utils.DataHelper;
 import com.bookstore.utils.LoggerHelper;
-import org.openqa.selenium.JavascriptExecutor;
 import org.testng.Assert;
-import org.testng.annotations.DataProvider;
-
-import java.util.Map;
+import org.testng.annotations.AfterMethod;
 
 public abstract class OrderBaseTest extends BaseSetup {
+    @AfterMethod(alwaysRun = true)
+    public void cleanupOrderCartData() {
+        CleanupHelper.cancelCustomerOrders(getDriver(), baseUrl);
+        CleanupHelper.cleanupCustomerCart(getDriver(), baseUrl);
+    }
+
     protected void loginAsCustomer() {
         LoggerHelper.info("[ORDER][BASE] Mở trang đăng nhập");
         LoginPage loginPage = PageFactoryManager.getLoginPage(getDriver(), baseUrl);
@@ -32,17 +36,17 @@ public abstract class OrderBaseTest extends BaseSetup {
         }
     }
 
-    protected OrderHistoryPage loginAsCustomerAndOpenOrderHistoryPage() {
+    protected InvoicePage loginAsCustomerAndOpenInvoicePage() {
         LoggerHelper.info("[ORDER][BASE] Chuẩn bị mở trang lịch sử đơn hàng bằng tài khoản CUSTOMER");
         loginAsCustomer();
 
         LoggerHelper.info("[ORDER][BASE] Mở trang lịch sử đơn hàng");
-        OrderHistoryPage ordPage = PageFactoryManager.getOrderHistoryPage(getDriver(), baseUrl);
+        InvoicePage ordPage = PageFactoryManager.getInvoicePage(getDriver(), baseUrl);
 
         return ordPage.open();
     }
 
-    protected OrderHistoryPage loginAsCustomerNotOrderAndOpenOrderHistoryPage(String user, String pass) {
+    protected InvoicePage loginAsCustomerNotOrderAndOpenInvoicePage(String user, String pass) {
         LoggerHelper.info("[ORDER][BASE] Mở trang đăng nhập");
         LoginPage loginPage = PageFactoryManager.getLoginPage(getDriver(), baseUrl);
         loginPage.open();
@@ -59,7 +63,7 @@ public abstract class OrderBaseTest extends BaseSetup {
         }
 
         LoggerHelper.info("[ORDER][BASE] Mở trang lịch sử đơn hàng");
-        OrderHistoryPage ordPage = PageFactoryManager.getOrderHistoryPage(getDriver(), baseUrl);
+        InvoicePage ordPage = PageFactoryManager.getInvoicePage(getDriver(), baseUrl);
 
         return ordPage.open();
     }
