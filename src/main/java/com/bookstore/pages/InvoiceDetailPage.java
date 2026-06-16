@@ -2,36 +2,16 @@ package com.bookstore.pages;
 
 import com.bookstore.factory.PageFactoryManager;
 import com.bookstore.utils.LoggerHelper;
-import org.openqa.selenium.Alert;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.FindBy;
-import org.openqa.selenium.support.ui.ExpectedConditions;
 
 import java.util.List;
 
 public class InvoiceDetailPage extends BasePage {
 
     private static final String PAGE_URL = "/invoice";
-
-    @FindBy(css = "[data-testid='invoice-order-id']")
-    private WebElement lblOrderId;
-
-    @FindBy(css = "[data-testid='order-item-status']")
-    private WebElement lblOrderStatus;
-
-    @FindBy(css = "[data-testid='invoice-payment-method']")
-    private WebElement lblPaymentMethod;
-
-    @FindBy(css = "[data-testid='invoice-total-price']")
-    private WebElement lblTotalPrice;
-
-    @FindBy(css = "[data-testid='invoice-container']")
-    private WebElement containerInvoice;
-
-    @FindBy(css = "[data-testid='order-cancel-btn']")
-    private List<WebElement> listCancelButtons;
 
     @FindBy(css = "[data-testid='order-detail-back-btn']")
     private WebElement btnDetailBack;
@@ -42,8 +22,11 @@ public class InvoiceDetailPage extends BasePage {
     @FindBy(css = "[data-testid='order-detail-recipient-name']")
     private WebElement lblDetailRecipientName;
 
-    @FindBy(css = ".right-inner-container--content-address__address span")
-    private List<WebElement> listDetailAddressSpans;
+    @FindBy(css = "[data-testid='order-detail-recipient-phone']")
+    private WebElement lblDetailRecipientPhone;
+
+    @FindBy(css = "[data-testid='order-detail-recipient-address']")
+    private WebElement lblDetailRecipientAddress;
 
     @FindBy(css = "[data-testid='order-detail-item-row']")
     private List<WebElement> listDetailProductRows;
@@ -66,103 +49,8 @@ public class InvoiceDetailPage extends BasePage {
     }
 
     public InvoiceDetailPage openWithId(String orderId) {
-        driver.get(baseUrl + PAGE_URL + "/" + orderId);
+        driver.get(baseUrl + PAGE_URL + "/" + normalizeOrderId(orderId));
         return this;
-    }
-
-    public boolean isOnInvoicePage() {
-        return waitForUrlContains("/invoice");
-    }
-
-    public String getOrderId() {
-        try {
-            return getTextOf(lblOrderId).replaceAll("[^0-9]", "");
-        } catch (Exception e) {
-            return "";
-        }
-    }
-
-    public String getOrderStatus() {
-        try {
-            return getTextOf(lblOrderStatus).toUpperCase();
-        } catch (Exception e) {
-            return "";
-        }
-    }
-
-    public String getPaymentMethod() {
-        try {
-            return getTextOf(lblPaymentMethod);
-        } catch (Exception e) {
-            return "";
-        }
-    }
-
-    public long getTotalPriceAsLong() {
-        try {
-            String raw = lblTotalPrice.getText().replaceAll("[^0-9]", "");
-            return raw.isEmpty() ? 0L : Long.parseLong(raw);
-        } catch (Exception e) {
-            return 0L;
-        }
-    }
-
-    public boolean isInvoiceDisplayed() {
-        try {
-            return isElementVisible(containerInvoice);
-        } catch (Exception e) {
-            return driver.getCurrentUrl().contains("/invoice");
-        }
-    }
-
-    public boolean isStatusPending() {
-        return getOrderStatus().contains("PENDING");
-    }
-
-    public boolean isStatusCancelled() {
-        return getOrderStatus().contains("CANCELLED");
-    }
-
-    public boolean isStatusPaidOrCompleted() {
-        String status = getOrderStatus();
-        return status.contains("PAID") || status.contains("COMPLETED")
-                || status.contains("ĐÃ THANH TOÁN") || status.contains("HOÀN THÀNH");
-    }
-
-    public int getCancelButtonCount() {
-        try {
-            return listCancelButtons.size();
-        } catch (Exception e) {
-            return 0;
-        }
-    }
-
-    public InvoiceDetailPage clickCancelAt(int index) {
-        LoggerHelper.info("[INVOICE_DETAIL_PAGE] Click hủy đơn hàng tại index: " + index);
-        wait.until(ExpectedConditions.visibilityOfAllElements(listCancelButtons));
-        scrollToElement(listCancelButtons.get(index));
-        clickElement(listCancelButtons.get(index));
-
-        try {
-            Alert confirmAlert = wait.until(ExpectedConditions.alertIsPresent());
-            LoggerHelper.info("[INVOICE_DETAIL_PAGE] Nội dung confirm dialog: " + confirmAlert.getText());
-            confirmAlert.accept();
-        } catch (Exception e) {
-            LoggerHelper.warn("[INVOICE_DETAIL_PAGE] Không xuất hiện alert browser: " + e.getMessage());
-        }
-        return this;
-    }
-
-    public InvoiceDetailPage cancelOrderById(String orderId) {
-        LoggerHelper.info("[INVOICE_DETAIL_PAGE] Hủy đơn hàng theo mã đơn: " + orderId);
-        openWithId(orderId);
-
-        if (getCancelButtonCount() <= 0) {
-            LoggerHelper.warn("[INVOICE_DETAIL_PAGE] Không có nút hủy cho mã đơn: " + orderId);
-            return this;
-        }
-
-        return clickCancelAt(0);
     }
 
     public String getDetailStatus() {
@@ -175,7 +63,7 @@ public class InvoiceDetailPage extends BasePage {
 
     public boolean isDetailInfoDisplayed() {
         try {
-            return isElementVisible(lblDetailRecipientName);
+            return isElementVisible(lblDetailStatus) && isElementVisible(lblDetailRecipientName);
         } catch (Exception e) {
             return false;
         }
@@ -191,7 +79,7 @@ public class InvoiceDetailPage extends BasePage {
 
     public String getDetailRecipientPhone() {
         try {
-            return listDetailAddressSpans.get(0).getText().trim();
+            return getTextOf(lblDetailRecipientPhone);
         } catch (Exception e) {
             return "";
         }
@@ -199,7 +87,7 @@ public class InvoiceDetailPage extends BasePage {
 
     public String getDetailRecipientAddress() {
         try {
-            return listDetailAddressSpans.get(1).getText().trim();
+            return getTextOf(lblDetailRecipientAddress);
         } catch (Exception e) {
             return "";
         }
@@ -210,23 +98,6 @@ public class InvoiceDetailPage extends BasePage {
             return listDetailProductRows.size();
         } catch (Exception e) {
             return 0;
-        }
-    }
-
-    public long getDetailSummaryTotalPrice() {
-        try {
-            String raw = lblDetailSummaryTotalPrice.getText().replaceAll("[^0-9]", "");
-            return raw.isEmpty() ? 0L : Long.parseLong(raw);
-        } catch (Exception e) {
-            return 0L;
-        }
-    }
-
-    public String getDetailSummaryPaymentMethod() {
-        try {
-            return getTextOf(lblDetailSummaryPaymentMethod);
-        } catch (Exception e) {
-            return "";
         }
     }
 
@@ -258,5 +129,9 @@ public class InvoiceDetailPage extends BasePage {
         scrollToElement(linkItemOrderDetail);
         jsClick(linkItemOrderDetail);
         return PageFactoryManager.getProductDetailPage(driver, baseUrl);
+    }
+
+    private String normalizeOrderId(String orderId) {
+        return orderId == null ? "" : orderId.replaceAll("[^0-9]", "");
     }
 }

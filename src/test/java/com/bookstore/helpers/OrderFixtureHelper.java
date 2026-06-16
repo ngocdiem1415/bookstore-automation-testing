@@ -1,7 +1,12 @@
 package com.bookstore.helpers;
 
 import com.bookstore.factory.PageFactoryManager;
-import com.bookstore.pages.*;
+import com.bookstore.pages.CartPage;
+import com.bookstore.pages.CheckoutPage;
+import com.bookstore.pages.InvoicePage;
+import com.bookstore.pages.LoginPage;
+import com.bookstore.pages.ProductDetailPage;
+import com.bookstore.pages.ProductListPage;
 import com.bookstore.utils.DataHelper;
 import com.bookstore.utils.LoggerHelper;
 import org.openqa.selenium.WebDriver;
@@ -55,13 +60,13 @@ public class OrderFixtureHelper {
 
         ProductDetailPage detailPage = listPage.clickBookAt(0);
         Assert.assertTrue(detailPage.getStockQuantity() > 0,
-                "[ERROR][FIXTURE]: Sản phẩm đầu tiên đã hết hàng..");
+                "[ERROR][FIXTURE]: Sản phẩm đầu tiên đã hết hàng.");
         detailPage.clickAddToCart();
         detailPage.getSuccessMessage();
 
         cartPage.open();
         Assert.assertTrue(cartPage.getCartItemCount() > 0,
-                "[ERROR][FIXTURE]: Giỏ hàng trống sau khi thêm sản phẩm..");
+                "[ERROR][FIXTURE]: Giỏ hàng trống sau khi thêm sản phẩm.");
         cartPage.checkCheckboxAt(0);
 
         CheckoutPage checkoutPage = cartPage.clickBuyButton();
@@ -76,11 +81,11 @@ public class OrderFixtureHelper {
         checkoutPage.clickSaveAndGetAlert();
         checkoutPage.selectPaymentMethod(data.get("paymentMethod"));
 
-        InvoiceDetailPage invoicePage = checkoutPage.clickBuyExpectingSuccess();
+        InvoicePage invoicePage = checkoutPage.clickBuyExpectingSuccess();
         Assert.assertTrue(invoicePage.isOnInvoicePage(),
-                "[ERROR][FIXTURE]: Trang hóa đơn dự kiến sau khi đặt hàng thanh toán khi nhận hàng (COD).");
+                "[ERROR][FIXTURE]: Kỳ vọng mở trang hóa đơn sau khi đặt hàng COD.");
 
-        String orderId = invoicePage.getOrderId();
+        String orderId = invoicePage.getFirstOrderId();
         Assert.assertTrue(orderId != null && !orderId.isBlank(),
                 "[ERROR][FIXTURE]: Không thể thu thập ID đơn hàng đã tạo.");
         LoggerHelper.info("[FIXTURE][ORDER] Đã tạo đơn hàng COD, mã đơn: " + orderId);

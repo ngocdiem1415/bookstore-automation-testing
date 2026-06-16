@@ -2,6 +2,8 @@ package com.bookstore.pages;
 
 import com.bookstore.factory.PageFactoryManager;
 import com.bookstore.utils.LoggerHelper;
+import org.openqa.selenium.Alert;
+import org.openqa.selenium.By;
 import org.openqa.selenium.Keys;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
@@ -32,14 +34,11 @@ public class InvoicePage extends BasePage {
     @FindBy(css = "[data-testid='order-search-input']")
     private WebElement txtSearchInput;
 
-    @FindBy(css = "[data-testid='order-list-item'], .container-product-content-inner__right-inner-center-product")
+    @FindBy(css = "[data-testid='order-list-item']")
     private List<WebElement> listOrderItems;
 
-    @FindBy(css = "[data-testid='order-empty-msg'], .text-center")
+    @FindBy(css = "[data-testid='order-empty-msg']")
     private WebElement lblEmptyMsg;
-
-    @FindBy(css = "[data-testid='order-item-status'], .container-product-content-inner__right-inner-center-product__header-title")
-    private List<WebElement> listOrderStatusTitles;
 
     @FindBy(css = "[data-testid='order-detail-link']")
     private List<WebElement> listDetailLinks;
@@ -67,6 +66,12 @@ public class InvoicePage extends BasePage {
 
     @FindBy(css = "[data-testid='order-review-submit-btn']")
     private WebElement btnReviewSubmit;
+
+    @FindBy(css = "[data-testid='order-item-status']")
+    private List<WebElement> listOrderStatus;
+
+    @FindBy(css = "[data-testid='invoice-order-id']")
+    private List<WebElement> listOrderIds;
 
     public InvoicePage(WebDriver driver, String baseUrl) {
         super(driver, baseUrl);
@@ -122,7 +127,7 @@ public class InvoicePage extends BasePage {
     }
 
     public InvoiceDetailPage clickDetailAt(int index) {
-        LoggerHelper.info("[INVOICE_PAGE] Mở chi tiết hóa đơn tại index: " + index);
+        LoggerHelper.info("[INVOICE_PAGE] Mở chi tiết hóa đơn tại vị trí: " + index);
         wait.until(ExpectedConditions.visibilityOfAllElements(listDetailLinks));
         clickElement(listDetailLinks.get(index));
         return PageFactoryManager.getInvoiceDetailPage(driver, baseUrl);
@@ -154,11 +159,37 @@ public class InvoicePage extends BasePage {
 
     public String getOrderStatusAt(int index) {
         try {
-            wait.until(ExpectedConditions.visibilityOfAllElements(listOrderStatusTitles));
-            return listOrderStatusTitles.get(index).getText().trim();
+            return getTextOf(listOrderStatus.get(index));
         } catch (Exception e) {
             return "";
         }
+    }
+
+    public String getOrderIdAt(int index) {
+        try {
+            String raw = getTextOf(listOrderIds.get(index));
+            return normalizeOrderId(raw);
+        } catch (Exception e) {
+            return "";
+        }
+    }
+
+    public String getFirstOrderId() {
+        return getOrderIdAt(0);
+    }
+
+    public int findOrderIndexById(String orderId) {
+        String expected = normalizeOrderId(orderId);
+        if (expected.isBlank()) {
+            return -1;
+        }
+
+        for (int i = 0; i < getOrderCount(); i++) {
+            if (expected.equals(getOrderIdAt(i))) {
+                return i;
+            }
+        }
+        return -1;
     }
 
     public int getCancelButtonCount() {
@@ -169,55 +200,38 @@ public class InvoicePage extends BasePage {
         }
     }
 
-    public int getReviewButtonCount() {
+    public InvoicePage cancelOrderById(String orderId) {
+        int index = findOrderIndexById(orderId);
+
+        if (index < 0 || index >= listCancelButtons.size()) {
+            LoggerHelper.warn("[INVOICE_PAGE] Không thể hủy đơn hàng: " + orderId);
+            return this;
+        }
+
+        LoggerHelper.info("[INVOICE_PAGE] Hủy đơn hàng theo mã: " + orderId);
+
+        scrollToElement(listCancelButtons.get(index));
+        clickElement(listCancelButtons.get(index));
+
         try {
-            return listReviewButtons.size();
+            Alert confirmAlert = wait.until(ExpectedConditions.alertIsPresent());
+            LoggerHelper.info("[INVOICE_PAGE] Nội dung xác nhận hủy đơn: " + confirmAlert.getText());
+            confirmAlert.accept();
         } catch (Exception e) {
-            return 0;
+            LoggerHelper.warn("[INVOICE_PAGE] Không xuất hiện hộp thoại xác nhận hủy đơn: "
+                    + e.getMessage());
         }
-    }
 
-    public InvoicePage clickReviewAt(int index) {
-        LoggerHelper.info("[INVOICE_PAGE] Click nút đánh giá tại index: " + index);
-        wait.until(ExpectedConditions.visibilityOfAllElements(listReviewButtons));
-        clickElement(listReviewButtons.get(index));
-        isElementVisible(lblReviewOverlay);
+        waitForUrlContains("/invoice");
         return this;
     }
 
-    public InvoicePage fillReviewForm(int starRating, String comment) {
-        LoggerHelper.info("[INVOICE_PAGE] Điền form đánh giá với số sao: " + starRating);
-        isElementVisible(lblReviewOverlay);
-
-        int productsCount = listReviewItems.size();
-        LoggerHelper.info("[INVOICE_PAGE] Số sản phẩm cần đánh giá trong overlay: " + productsCount);
-
-        for (int i = 0; i < productsCount; i++) {
-            int starIndex = i * 5 + (starRating - 1);
-            if (starIndex < listAllStars.size()) {
-                clickElement(listAllStars.get(starIndex));
-            }
-
-            if (i < listAllCommentTextareas.size()) {
-                WebElement txtComment = listAllCommentTextareas.get(i);
-                txtComment.clear();
-                txtComment.sendKeys(comment);
-            }
-        }
-        return this;
+    private WebElement getOrderItemAt(int index) {
+        wait.until(ExpectedConditions.visibilityOfAllElements(listOrderItems));
+        return listOrderItems.get(index);
     }
 
-    public InvoicePage submitReview() {
-        LoggerHelper.info("[INVOICE_PAGE] Gửi đánh giá sản phẩm");
-        clickElement(btnReviewSubmit);
-        isElementVisible(lblReviewOverlay);
-        return this;
-    }
-
-    public InvoicePage cancelReview() {
-        LoggerHelper.info("[INVOICE_PAGE] Đóng overlay đánh giá");
-        clickElement(btnReviewCancel);
-        isElementVisible(lblReviewOverlay);
-        return this;
+    private String normalizeOrderId(String orderId) {
+        return orderId == null ? "" : orderId.replaceAll("[^0-9]", "");
     }
 }

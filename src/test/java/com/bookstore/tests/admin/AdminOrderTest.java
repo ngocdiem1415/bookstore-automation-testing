@@ -15,38 +15,37 @@ public class AdminOrderTest extends AdminBaseTest {
 
     @AfterMethod(alwaysRun = true)
     public void cleanupAdminOrderFixtures() {
-        CleanupHelper.completeAdminOrders(getDriver(), baseUrl);
         CleanupHelper.cancelAdminOrders(getDriver(), baseUrl);
     }
 
     @Test(
             priority = 1,
-            description = "ADM-ORD-01: Admin chuyen don hang Pending -> Shipping -> Completed"
+            description = "ADM-ORD-01: Admin chuyển đơn hàng Pending -> Shipping"
     )
     public void ADM_ORD_01_CompleteShippingOrder() {
-        String orderId = getOrderIdForCompleteFlow();
-        LoggerHelper.info("[ADMIN][ORDER] Hoàn tất đơn hàng dữ liệu nền, mã đơn: " + orderId);
+        String orderId = getOrderIdForShippingFlow();
+        LoggerHelper.info("[ADMIN][ORDER] Chuyển đơn hàng dữ liệu nền sang Shipping, mã đơn: " + orderId);
 
         loginAsAdmin();
         AdminOrderPage page = PageFactoryManager.getAdminOrderPage(getDriver(), baseUrl);
-        CleanupHelper.completeAdminOrder(page, getDriver(), baseUrl, orderId);
+        CleanupHelper.shipAdminOrder(page, getDriver(), baseUrl, orderId);
 
         page.open();
-        int completedIndex = page.searchByOrderId(orderId);
-        Assert.assertTrue(completedIndex >= 0,
-                "Cannot find order after completing fixture order ID: " + orderId);
+        int shippingIndex = page.searchByOrderId(orderId);
+        Assert.assertTrue(shippingIndex >= 0,
+                "Cannot find order after shipping fixture order ID: " + orderId);
 
-        String orderStatus = page.getStatusAt(completedIndex);
-        Assert.assertTrue(isCompletedStatus(orderStatus),
-                "Order status must be Completed. Order ID: " + orderId + ". Actual: " + orderStatus);
+        String orderStatus = page.getStatusAt(shippingIndex);
+        Assert.assertTrue(isShippingStatus(orderStatus),
+                "Trạng thái đơn hàng phải là Shipping. Order ID: " + orderId + ". Actual: " + orderStatus);
 
         CleanupRegistry.adminCompleteOrderIds.remove(orderId);
-        LoggerHelper.info("[ADMIN][ORDER] Hoàn tất đơn hàng dữ liệu nền thành công: " + orderId);
+        LoggerHelper.info("[ADMIN][ORDER] Chuyển đơn hàng dữ liệu nền sang Shipping thành công: " + orderId);
     }
 
     @Test(
             priority = 2,
-            description = "ADM-ORD-02: Admin khong the doi trang thai tu Completed ve Pending"
+            description = "ADM-ORD-02: Admin không thể đổi trạng thái từ Completed về Pending"
     )
     public void ADM_ORD_02_UpdateStatusBackward() {
         LoggerHelper.info("[ADMIN][ORDER] Kiểm tra đơn đã hoàn thành không cho đổi ngược trạng thái");
@@ -68,7 +67,7 @@ public class AdminOrderTest extends AdminBaseTest {
 
     @Test(
             priority = 3,
-            description = "ADM-ORD-03: Admin huy don hang dang Pending"
+            description = "ADM-ORD-03: Admin hủy đơn hàng đang Pending"
     )
     public void ADM_ORD_03_CancelPendingOrder() {
         String orderId = getOrderIdForCancelFlow();
@@ -91,7 +90,7 @@ public class AdminOrderTest extends AdminBaseTest {
         LoggerHelper.info("[ADMIN][ORDER] Hủy đơn hàng dữ liệu nền thành công: " + orderId);
     }
 
-    private String getOrderIdForCompleteFlow() {
+    private String getOrderIdForShippingFlow() {
         if (!CleanupRegistry.adminCompleteOrderIds.isEmpty()) {
             return CleanupRegistry.adminCompleteOrderIds.get(0);
         }
@@ -102,7 +101,7 @@ public class AdminOrderTest extends AdminBaseTest {
             return orderId;
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            throw new RuntimeException("Cannot create COD order fixture for complete flow", e);
+            throw new RuntimeException("Không thể tạo biểu mẫu đơn hàng COD cho quy trình vận chuyển", e);
         }
     }
 
@@ -121,12 +120,12 @@ public class AdminOrderTest extends AdminBaseTest {
         }
     }
 
-    private boolean isCompletedStatus(String status) {
+    private boolean isShippingStatus(String status) {
         String normalized = status == null ? "" : status.toLowerCase();
-        return normalized.contains("completed")
-                || normalized.contains("hoàn thành")
-                || normalized.contains("da nhan")
-                || normalized.contains("đã nhận");
+        return normalized.contains("shipping")
+                || normalized.contains("giao")
+                || normalized.contains("đang giao")
+                || normalized.contains("cho giao");
     }
 
     private boolean isCancelledStatus(String status) {

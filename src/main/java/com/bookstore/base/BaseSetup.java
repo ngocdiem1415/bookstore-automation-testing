@@ -22,8 +22,8 @@ public class BaseSetup {
     @BeforeClass
     public void initializeTestBaseSetup(
             @Optional("chrome") String browser,
-            @Optional("http://localhost:8080") String appURL) {
-//            @Optional("http://165.245.178.123") String appURL) {
+//            @Optional("http://localhost:8080") String appURL) {
+            @Optional("http://165.245.178.123") String appURL) {
         try {
             String runtimeBrowser = System.getProperty("browser", browser);
             String runtimeAppUrl = System.getProperty("appURL", appURL);

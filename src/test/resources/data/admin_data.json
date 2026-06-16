@@ -18,7 +18,7 @@
     "title_prefix": "Sách File Exe",
     "price": "100000",
     "quantity": "10",
-    "invalid_file_path": "\\src\\test\\resources\\data\\shell.exe"
+    "invalid_file_path": "/src/test/resources/data/shell.exe"
   },
   {
     "type": "ADM_PRD_04",
