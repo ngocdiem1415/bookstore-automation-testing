@@ -4,7 +4,6 @@ import io.github.bonigarcia.wdm.WebDriverManager;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
-import org.openqa.selenium.edge.EdgeDriver;
 
 import java.time.Duration;
 import java.util.HashMap;
@@ -33,6 +32,12 @@ public class BrowserFactory {
                 options.addArguments("--disable-save-password-bubble");
                 options.addArguments("--disable-popup-blocking");
                 options.addArguments("--start-maximized");
+                if (isHeadless()) {
+                    options.addArguments("--headless=new");
+                    options.addArguments("--no-sandbox");
+                    options.addArguments("--disable-dev-shm-usage");
+                    options.addArguments("--window-size=1920,1080");
+                }
 
                 // Khuyên dùng khi test server thật để ổn định hơn
                 options.addArguments("--remote-allow-origins=*");
@@ -48,5 +53,9 @@ public class BrowserFactory {
         driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(3));
 
         return driver;
+    }
+    private static boolean isHeadless() {
+        return Boolean.parseBoolean(System.getProperty("headless", "false"))
+                || Boolean.parseBoolean(System.getenv("CI"));
     }
 }

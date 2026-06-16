@@ -1,0 +1,50 @@
+name: Bookstore Automation Tests
+
+on:
+  push:
+    branches:
+      - cdci
+
+env:
+  TZ: Asia/Bangkok
+
+jobs:
+  test:
+    name: Run Selenium TestNG Suite
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 11
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '11'
+          cache: maven
+
+      - name: Validate APP_URL secret
+        run: |
+          if [ -z "${{ secrets.APP_URL }}" ]; then
+            echo "APP_URL secret is required."
+            exit 1
+          fi
+
+      - name: Run automation tests
+        run: mvn -B clean test -DappURL="${{ secrets.APP_URL }}" -Dbrowser=chrome -Dheadless=true
+
+      - name: Resolve current report date
+        if: always()
+        run: echo "REPORT_DATE=$(date +'%Y-%m-%d')" >> "$GITHUB_ENV"
+
+      - name: Upload current day test report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: bookstore-test-report-${{ env.REPORT_DATE }}
+          retention-days: 14
+          if-no-files-found: warn
+          path: |
+            target/reports/${{ env.REPORT_DATE }}/
+            target/surefire-reports/
