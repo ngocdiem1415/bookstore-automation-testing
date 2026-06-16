@@ -39,7 +39,7 @@ public class BrowserFactory {
                     options.addArguments("--window-size=1920,1080");
                 }
 
-                // Khuyên dùng khi test server thật để ổn định hơn
+                // Dùng khi test server thật để ổn định hơn
                 options.addArguments("--remote-allow-origins=*");
 
                 driver = new ChromeDriver(options);
