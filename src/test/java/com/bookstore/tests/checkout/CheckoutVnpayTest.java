@@ -1,8 +1,6 @@
 package com.bookstore.tests.checkout;
 
-import com.bookstore.helpers.CleanupRegistry;
 import com.bookstore.pages.CheckoutPage;
-import com.bookstore.pages.InvoiceDetailPage;
 import com.bookstore.utils.JsonDataProvider;
 import com.bookstore.utils.LoggerHelper;
 import org.openqa.selenium.support.ui.WebDriverWait;
@@ -18,8 +16,7 @@ public class CheckoutVnpayTest extends CheckoutBaseTest {
             priority = 1,
             dataProvider = "GlobalJsonFeeder",
             dataProviderClass = JsonDataProvider.class,
-            description = "CHK-VNP-01: Kiểm thử đặt hàng bằng hình thức thanh toán VNPay " +
-                    "và chuyển hướng sang cổng thanh toán VNPay."
+            description = "CHK-VNP-01: Kiểm thử đặt hàng bằng hình thức thanh toán VNPay và chuyển hướng sang cổng thanh toán VNPay."
     )
     public void CHECKOUT_VNP_01_VnpayPaymentSuccess(Map<String, String> data) throws InterruptedException {
         LoggerHelper.info("[CHECKOUT][VNPAY] Bắt đầu kiểm thử thanh toán VNPay thành công");
@@ -30,12 +27,7 @@ public class CheckoutVnpayTest extends CheckoutBaseTest {
         cp.selectPaymentMethod(data.get("paymentMethod"));
 
         LoggerHelper.info("[CHECKOUT][VNPAY] Click nút đặt hàng");
-        InvoiceDetailPage invoice = cp.clickBuyExpectingSuccess();
-        String orderId = invoice.getOrderId();
-        if (orderId != null && !orderId.isBlank()) {
-            CleanupRegistry.adminCancelOrderIds.add(orderId);
-            LoggerHelper.info("[CHECKOUT][VNPAY] Đăng ký order cho admin cancel: " + orderId);
-        }
+        cp.clickBuyExpectingPaymentRedirect();
 
         LoggerHelper.info("[CHECKOUT][VNPAY] Chờ chuyển hướng sang cổng VNPay");
         WebDriverWait wait = new WebDriverWait(getDriver(), Duration.ofSeconds(20));
@@ -54,7 +46,7 @@ public class CheckoutVnpayTest extends CheckoutBaseTest {
             dataProviderClass = JsonDataProvider.class,
             description = "CHK-VNP-02: Kiểm thử người dùng quay lại trang trước sau khi chọn phương thức thanh toán VNPay."
     )
-    public void CHECKOUT_VNP_02_VnpayRedirect(Map<String, String> data){
+    public void CHECKOUT_VNP_02_VnpayRedirect(Map<String, String> data) {
         LoggerHelper.info("[CHECKOUT][VNPAY] Bắt đầu kiểm thử redirect tới cổng thanh toán VNPay");
 
         CheckoutPage cp = setupCheckoutReady(data);
@@ -70,5 +62,4 @@ public class CheckoutVnpayTest extends CheckoutBaseTest {
 
         LoggerHelper.info("[CHECKOUT][VNPAY] Kiểm tra redirect/back VNPay hoàn tất");
     }
-
 }

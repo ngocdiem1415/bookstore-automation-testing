@@ -20,19 +20,21 @@ public class OrderCancelTest extends OrderBaseTest {
 
     @Test(
             priority = 1,
-            description = "ORD-CAN-01: Huy don hang trang thai cho xu ly"
+            description = "ORD-CAN-01: Hủy đơn hàng trạng thái chờ xử lý"
     )
     public void ORD_CAN_01_CancelPendingOrder() throws InterruptedException {
         LoggerHelper.info("[ORDER][CANCEL] Bắt đầu kiểm thử khách hàng hủy đơn COD mới tạo");
 
         String orderId = OrderFixtureHelper.createCodOrder(getDriver(), baseUrl);
 
-        InvoiceDetailPage ordPage = PageFactoryManager.getInvoiceDetailPage(getDriver(), baseUrl);
+        InvoicePage invoicePage = PageFactoryManager.getInvoicePage(getDriver(), baseUrl);
+        invoicePage.open();
         LoggerHelper.info("[ORDER][CANCEL] Hủy đơn hàng vừa tạo, mã đơn: " + orderId);
-        ordPage.cancelOrderById(orderId);
+        invoicePage.cancelOrderById(orderId);
 
-        ordPage.openWithId(orderId);
-        String statusAfter = ordPage.getDetailStatus();
+        InvoiceDetailPage detailPage = PageFactoryManager.getInvoiceDetailPage(getDriver(), baseUrl);
+        detailPage.openWithId(orderId);
+        String statusAfter = detailPage.getDetailStatus();
         LoggerHelper.info("[ORDER][CANCEL] Trạng thái sau khi hủy đơn " + orderId + ": " + statusAfter);
         Assert.assertTrue(
                 isCancelledStatus(statusAfter),
@@ -42,7 +44,7 @@ public class OrderCancelTest extends OrderBaseTest {
 
     @Test(
             priority = 2,
-            description = "ORD-CAN-02: Khong the huy don dang giao hoac da hoan thanh"
+            description = "ORD-CAN-02: Không thể hủy đơn đang giao hoặc đã hoàn thành"
     )
     public void ORD_CAN_02_CannotCancelShippedOrder() {
         LoggerHelper.info("[ORDER][CANCEL] Kiểm tra đơn đã giao/hoàn thành không hiển thị nút hủy");
@@ -71,7 +73,7 @@ public class OrderCancelTest extends OrderBaseTest {
             priority = 3,
             dataProvider = "GlobalJsonFeeder",
             dataProviderClass = JsonDataProvider.class,
-            description = "ORD-CAN-03: Kiem tra khoi phuc ton kho sau khi huy don"
+            description = "ORD-CAN-03: Kiểm tra khôi phục tồn kho sau khi hủy đơn"
     )
     public void ORD_CAN_03_StockRestoredOnCancel(Map<String, String> data) throws InterruptedException {
         LoggerHelper.info("[ORDER][CANCEL] Bắt đầu kiểm thử khôi phục tồn kho sau khi hủy đơn");
@@ -110,12 +112,11 @@ public class OrderCancelTest extends OrderBaseTest {
         checkoutPage.clickSaveAndGetAlert();
         checkoutPage.selectPaymentMethod(data.get("paymentMethod"));
 
-        InvoiceDetailPage invoice = checkoutPage.clickBuyExpectingSuccess();
-        invoice.open();
+        InvoicePage invoice = checkoutPage.clickBuyExpectingSuccess();
         Assert.assertTrue(invoice.isOnInvoicePage(),
                 "Expected invoice page. Actual: " + invoice.getCurrentUrl());
 
-        String orderId = invoice.getOrderId();
+        String orderId = invoice.getFirstOrderId();
         Assert.assertTrue(orderId != null && !orderId.isBlank(),
                 "Cannot capture created order ID for stock restore test.");
         CleanupRegistry.customerCancelOrderIds.add(orderId);
@@ -135,18 +136,19 @@ public class OrderCancelTest extends OrderBaseTest {
                         + "\n  Expect : " + expectedStockAfterOrder
                         + "\n  Actual : " + stockAfterOrder);
 
-        InvoiceDetailPage ordPage = PageFactoryManager.getInvoiceDetailPage(getDriver(), baseUrl);
+        invoice.open();
         LoggerHelper.info("[ORDER][CANCEL] Hủy đơn hàng theo mã đơn: " + orderId);
-        ordPage.cancelOrderById(orderId);
+        invoice.cancelOrderById(orderId);
         CleanupRegistry.customerCancelOrderIds.remove(orderId);
 
-        ordPage.openWithId(orderId);
-        detailPage = ordPage.clickProductInOrderDetail();
+        InvoiceDetailPage ordDetailPage = PageFactoryManager.getInvoiceDetailPage(getDriver(), baseUrl);
+        ordDetailPage.openWithId(orderId);
+        detailPage = ordDetailPage.clickProductInOrderDetail();
 
         int stockAfter = detailPage.getStockQuantity();
         LoggerHelper.info("[ORDER][CANCEL] Tồn kho trước: " + stockBefore + " | sau khi hủy: " + stockAfter);
         Assert.assertEquals(stockAfter, stockBefore,
-                "[FAIL] Stock was not restored after cancelling order."
+                "[FAIL] Hàng tồn kho không được khôi phục sau khi hủy đơn hàng."
                         + "\n  Before       : " + stockBefore
                         + "\n  After cancel : " + stockAfter);
     }
