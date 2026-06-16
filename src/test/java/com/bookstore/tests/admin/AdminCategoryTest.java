@@ -1,14 +1,24 @@
 package com.bookstore.tests.admin;
 
 import com.bookstore.factory.PageFactoryManager;
+import com.bookstore.helpers.CleanupHelper;
+import com.bookstore.helpers.CleanupRegistry;
 import com.bookstore.pages.AdminCategoryPage;
 import com.bookstore.utils.LoggerHelper;
 import org.testng.Assert;
+import org.testng.annotations.AfterMethod;
 import org.testng.annotations.Test;
 
 
 public class AdminCategoryTest extends AdminBaseTest {
-    private static final String NEW_CAT = "Mới_" + System.currentTimeMillis();
+    private String uniqueCategoryName(String prefix) {
+        return "AUTO_CAT_" + prefix + "_" + System.currentTimeMillis();
+    }
+
+    @AfterMethod(alwaysRun = true)
+    public void cleanupCategoryData() {
+        CleanupHelper.cleanupCreatedCategories(getDriver(), baseUrl);
+    }
 
     @Test(priority = 1, description = "ADM-CAT-01: Kiểm thử thêm danh mục thành công")
     public void ADM_CAT_01_AddCategorySuccess() {
@@ -21,10 +31,12 @@ public class AdminCategoryTest extends AdminBaseTest {
         int before = page.getCategoryCount();
         LoggerHelper.info("[ADMIN][CATEGORY] Số danh mục trước khi thêm: " + before);
 
-        LoggerHelper.info("[ADMIN][CATEGORY] Thêm danh mục mới: " + NEW_CAT);
+        String newCategory = uniqueCategoryName("new");
+        LoggerHelper.info("[ADMIN][CATEGORY] Thêm danh mục mới: " + newCategory);
         page.clickAdd()
-                .enterName(NEW_CAT)
+                .enterName(newCategory)
                 .clickSave();
+        CleanupRegistry.createdCategories.add(newCategory);
 
         String message = page.getNotificationMessage();
         LoggerHelper.info("[ADMIN][CATEGORY] Notification sau khi thêm: " + message);
@@ -40,8 +52,8 @@ public class AdminCategoryTest extends AdminBaseTest {
         LoggerHelper.info("[ADMIN][CATEGORY] Số danh mục sau khi thêm: " + after);
 
         Assert.assertTrue(
-                page.isCategoryInList(NEW_CAT) || after > before,
-                "Expected category '" + NEW_CAT + "' in list or category count increased."
+                page.isCategoryInList(newCategory) || after > before,
+                "Expected category '" + newCategory + "' in list or category count increased."
         );
         LoggerHelper.info("[ADMIN][CATEGORY] Kết thúc kiểm thử: PASS");
     }
@@ -56,12 +68,13 @@ public class AdminCategoryTest extends AdminBaseTest {
 
         AdminCategoryPage page = PageFactoryManager.getAdminCategoryPage(getDriver(), baseUrl);
         page.open();
-        String duplicateName = "Danh mục test trùng";
+        String duplicateName = uniqueCategoryName("duplicate");
 
         LoggerHelper.info("[ADMIN][CATEGORY] Tạo dữ liệu ban đầu: " + duplicateName);
         page.clickAdd()
                 .enterName(duplicateName)
                 .clickSave();
+        CleanupRegistry.createdCategories.add(duplicateName);
         page.getNotificationMessage();
 
         LoggerHelper.info("[ADMIN][CATEGORY] Thêm lại danh mục trùng tên: " + duplicateName);

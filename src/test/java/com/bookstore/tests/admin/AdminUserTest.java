@@ -1,6 +1,8 @@
 package com.bookstore.tests.admin;
 
 import com.bookstore.factory.PageFactoryManager;
+import com.bookstore.helpers.CleanupHelper;
+import com.bookstore.helpers.CleanupRegistry;
 import com.bookstore.pages.AdminUserEditPage;
 import com.bookstore.pages.AdminUserPage;
 import com.bookstore.pages.LoginPage;
@@ -9,6 +11,7 @@ import com.bookstore.utils.DataHelper;
 import com.bookstore.utils.JsonDataProvider;
 import com.bookstore.utils.LoggerHelper;
 import org.testng.Assert;
+import org.testng.annotations.AfterMethod;
 import org.testng.annotations.Test;
 
 import java.util.Map;
@@ -48,7 +51,7 @@ public class AdminUserTest extends AdminBaseTest {
         );
 
         signupPage.clickSubmitExpectingSuccess();
-        String alert = signupPage.getMessageAndAccept();
+        String alert = signupPage.getMessage();
         Assert.assertTrue(alert.contains("Đăng ký thành công! Vui lòng kiểm tra email để xác nhận tài khoản"),
                 "Lỗi: Hệ thống không hiển thị thông báo đăng kí thành công sau khi gửi thông tin hợp lệ!");
         LoggerHelper.info("[AUTH][REGISTER] Thông báo đăng kí thành công");
@@ -64,12 +67,18 @@ public class AdminUserTest extends AdminBaseTest {
         );
 
         LoggerHelper.info("[AUTH][USER][SETUP] Tạo tài khoản thành công: " + username);
+        CleanupRegistry.createdUsers.add(username);
         return Map.of(
                 "username", username,
                 "password", password,
                 "email", email,
                 "phone", phone
         );
+    }
+
+    @AfterMethod(alwaysRun = true)
+    public void cleanupUserData() {
+        CleanupHelper.cleanupCreatedUsers(getDriver(), baseUrl);
     }
 
     private void blockUserByUsername(String username) {
@@ -87,30 +96,6 @@ public class AdminUserTest extends AdminBaseTest {
         String alert = editPage.selectStatus("2")
                 .clickUpdateAndGetAlert();
         LoggerHelper.info("[AUTH][USER][SETUP] Alert sau khi khóa user: " + alert);
-    }
-
-    private void deleteUserByUsername(String username) {
-        LoggerHelper.info("[AUTH][USER] Xóa user test: " + username);
-        loginAsAdmin();
-
-        AdminUserPage page =
-                PageFactoryManager.getAdminUserPage(getDriver(), baseUrl);
-        page.open();
-
-        int index = page.searchByUsername(username);
-        if (index < 0) {
-            LoggerHelper.warn(
-                    "[AUTH][USER] Không tìm thấy user cần xóa: "
-                            + username);
-            return;
-        }
-
-        page.clickDeleteAt(index);
-        String notification =
-                page.confirmDeleteAndGetNotification();
-        LoggerHelper.info(
-                "[AUTH][USER] Kết quả xóa user: "
-                        + notification);
     }
 
     @Test(

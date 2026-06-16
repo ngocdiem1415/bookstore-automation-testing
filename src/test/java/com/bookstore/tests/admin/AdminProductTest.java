@@ -1,11 +1,14 @@
 package com.bookstore.tests.admin;
 
 import com.bookstore.factory.PageFactoryManager;
+import com.bookstore.helpers.CleanupRegistry;
+import com.bookstore.helpers.CleanupHelper;
 import com.bookstore.pages.AdminProductFormPage;
 import com.bookstore.pages.AdminProductPage;
 import com.bookstore.utils.JsonDataProvider;
 import com.bookstore.utils.LoggerHelper;
 import org.testng.Assert;
+import org.testng.annotations.AfterMethod;
 import org.testng.annotations.Test;
 
 import java.io.File;
@@ -14,7 +17,7 @@ import java.util.Map;
 public class AdminProductTest extends AdminBaseTest {
 
     private String uniqueTitle(String prefix) {
-        return prefix + " " + System.currentTimeMillis();
+        return "AUTO_PRD_" + prefix + " " + System.currentTimeMillis();
     }
 
     private boolean containsAny(String actual, String... expectedTexts) {
@@ -69,8 +72,14 @@ public class AdminProductTest extends AdminBaseTest {
         AdminProductFormPage formPage = openAddProductForm(listPage);
         String alert = fillValidProductForm(formPage, title, data)
                 .clickSaveAndGetAlert();
+        CleanupRegistry.createdProducts.add(title);
         LoggerHelper.info("[ADMIN][PRODUCT] Alert sau khi tạo sản phẩm test: " + alert);
         return title;
+    }
+
+    @AfterMethod(alwaysRun = true)
+    public void cleanupProductData() {
+        CleanupHelper.cleanupCreatedProducts(getDriver(), baseUrl);
     }
 
     @Test(
@@ -79,7 +88,7 @@ public class AdminProductTest extends AdminBaseTest {
             dataProviderClass = JsonDataProvider.class,
             description = "ADM-PRO-01: Admin thêm sản phẩm thành công."
     )
-    public void ADM_PRO_01_AddProductSuccess(Map<String, String> data) {
+    public void ADM_PRD_01_AddProductSuccess(Map<String, String> data) {
         LoggerHelper.info("[ADMIN][PRODUCT]Bắt đầu kiểm thử thêm sản phẩm thành công");
         AdminProductPage listPage = openProductPageAsAdmin();
 
@@ -94,6 +103,7 @@ public class AdminProductTest extends AdminBaseTest {
 
         String alert = fillValidProductForm(formPage, title, data)
                 .clickSaveAndGetAlert();
+        CleanupRegistry.createdProducts.add(title);
         LoggerHelper.info("[ADMIN][PRODUCT] Alert sau khi thêm: " + alert);
 
         listPage.open();
@@ -115,7 +125,7 @@ public class AdminProductTest extends AdminBaseTest {
             dataProviderClass = JsonDataProvider.class,
             description = "ADM-PRO-02: Admin không thể thêm sản phẩm với giá âm."
     )
-    public void ADM_PRO_02_AddProductNegativePrice(Map<String, String> data) {
+    public void ADM_PRD_02_AddProductNegativePrice(Map<String, String> data) {
         LoggerHelper.info("[ADMIN][PRODUCT] Bắt đầu kiểm thử thêm sản phẩm với giá âm");
 
         AdminProductPage listPage = openProductPageAsAdmin();
@@ -150,7 +160,7 @@ public class AdminProductTest extends AdminBaseTest {
             dataProviderClass = JsonDataProvider.class,
             description = "ADM-PRO-03: Admin không thể upload file .exe thay cho ảnh."
     )
-    public void ADM_PRO_03_UploadExecutableFileBoundary(Map<String, String> data) {
+    public void ADM_PRD_03_UploadExecutableFileBoundary(Map<String, String> data) {
         LoggerHelper.info("[ADMIN][PRODUCT] Bắt đầu kiểm thử upload file exe");
 
         AdminProductPage listPage = openProductPageAsAdmin();
@@ -178,6 +188,7 @@ public class AdminProductTest extends AdminBaseTest {
                 .enterPrice(data.get( "price"))
                 .enterQuantity(data.get("quantity"))
                 .uploadThumbnail(absolutePath);
+        CleanupRegistry.createdProducts.add(title);
 
         String alert = formPage.clickSaveAndGetAlert();
 
@@ -213,12 +224,14 @@ public class AdminProductTest extends AdminBaseTest {
         listPage.open();
 
         LoggerHelper.info("[ADMIN][PRODUCT][ADM-PRE-01] Click sửa sản phẩm đầu tiên");
-        listPage.clickEditAt(0);
+        listPage.clickEditByTitle(oldTitle);
 
         AdminProductFormPage formPage = PageFactoryManager.getAdminProductFormPage(getDriver(), baseUrl);
 
         String alert = formPage.enterTitle(newTitle)
                 .clickSaveAndGetAlert();
+        CleanupRegistry.createdProducts.remove(oldTitle);
+        CleanupRegistry.createdProducts.add(newTitle);
 
         LoggerHelper.info("[ADMIN][PRODUCT][ADM-PRE-01] Alert sau khi sửa: " + alert);
 
@@ -241,13 +254,13 @@ public class AdminProductTest extends AdminBaseTest {
     public void ADM_PRD_05_EditProductBlankTitle(Map<String, String> data) {
         LoggerHelper.info("[ADMIN][PRODUCT][ADM-PRE-02] Bắt đầu kiểm thử bỏ trống tên sản phẩm khi sửa");
         loginAsAdmin();
-        prepareProduct(data, data.get("title_prefix"));
+        String title = prepareProduct(data, data.get("title_prefix"));
         AdminProductPage listPage = PageFactoryManager.getAdminProductPage(getDriver(), baseUrl);
         LoggerHelper.info("[ADMIN][PRODUCT][ADM-PRE-02] Mở trang quản lí danh sách sản phẩm");
         listPage.open();
 
         LoggerHelper.info("[ADMIN][PRODUCT][ADM-PRE-02] Click sửa sản phẩm đầu tiên");
-        listPage.clickEditAt(0);
+        listPage.clickEditByTitle(title);
         AdminProductFormPage formPage = PageFactoryManager.getAdminProductFormPage(getDriver(), baseUrl);
         String blankTitle = data.get("blank_title");
         LoggerHelper.info("[ADMIN][PRODUCT][ADM-PRE-02] Xóa trống title sản phẩm");
@@ -285,7 +298,7 @@ public class AdminProductTest extends AdminBaseTest {
 
         LoggerHelper.info("[ADMIN][PRODUCT] Số sản phẩm trước khi xóa: " + before);
 
-        listPage.clickDeleteAt(0);
+        listPage.clickDeleteByTitle(title);
         String message = listPage.getNotificationMessage();
         LoggerHelper.info("[ADMIN][PRODUCT] Notification sau khi xóa: " + message);
         listPage.open();
@@ -296,6 +309,7 @@ public class AdminProductTest extends AdminBaseTest {
                 after < before || message.toLowerCase().contains("xóa"),
                 "Expected product count decreases after deletion."
         );
+        CleanupRegistry.createdProducts.remove(title);
 
         LoggerHelper.info("[ADMIN][PRODUCT] Xóa sản phẩm thành công");
     }
@@ -308,14 +322,14 @@ public class AdminProductTest extends AdminBaseTest {
         LoggerHelper.info("[ADMIN][PRODUCT] Bắt đầu kiểm thử hủy xóa sản phẩm");
         loginAsAdmin();
 
-        prepareProduct(data, data.get("title_prefix"));
+        String title = prepareProduct(data, data.get("title_prefix"));
         AdminProductPage listPage = PageFactoryManager.getAdminProductPage(getDriver(), baseUrl);
         listPage.open();
 
         int before = listPage.getProductCount();
         LoggerHelper.info("[ADMIN][PRODUCT] Số sản phẩm trước khi hủy xóa: " + before);
         LoggerHelper.info("[ADMIN][PRODUCT] Click xóa rồi hủy xóa sản phẩm đầu tiên");
-        listPage.clickCancelDeleteAt(0);
+        listPage.clickCancelDeleteByTitle(title);
 
         LoggerHelper.info("[ADMIN][PRODUCT] Mở trang quản lý sản phẩm");
         listPage.open();

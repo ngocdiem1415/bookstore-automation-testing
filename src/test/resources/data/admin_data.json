@@ -1,6 +1,6 @@
 [
   {
-    "type": "ADM_PRO_01",
+    "type": "ADM_PRD_01",
     "title_prefix": "Sách Tự Động",
     "author": "Tác giả test",
     "price": "150000",
@@ -9,12 +9,12 @@
     "publisher_index": "1"
   },
   {
-    "type": "ADM_PRO_02",
+    "type": "ADM_PRD_02",
     "title_prefix": "Sách Giá Âm",
     "invalid_price": "-10"
   },
   {
-    "type": "ADM_PRO_03",
+    "type": "ADM_PRD_03",
     "title_prefix": "Sách File Exe",
     "price": "100000",
     "quantity": "10",
@@ -41,7 +41,7 @@
     "publisher_index": "1"
   },
   {
-    "type": "ADM_PRD_01",
+    "type": "ADM_PRD_06",
     "title_prefix": "Sách Để Xóa",
     "author": "Tác giả test",
     "price": "150000",
@@ -51,7 +51,7 @@
     "status": "ACTIVE"
   },
   {
-    "type": "ADM_PRD_02",
+    "type": "ADM_PRD_07",
     "title_prefix": "Sách Để Xóa",
     "author": "Tác giả test",
     "price": "150000",
