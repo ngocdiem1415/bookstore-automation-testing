@@ -55,6 +55,19 @@ public class ProfilePage extends BasePage {
         return this;
     }
 
+    public String getPhoneValue() {
+        return txtProfilePhone.getAttribute("value");
+    }
+
+    public String getBirthdateValue() {
+        return txtProfileBirthdate.getAttribute("value");
+    }
+
+    public String getSelectedGenderValue() {
+        Select select = new Select(selProfileGender);
+        return select.getFirstSelectedOption().getAttribute("value");
+    }
+
     public ProfilePage uploadAvatar(String filePath) {
         ((JavascriptExecutor) driver).executeScript(
                 "arguments[0].style.display = 'block'; arguments[0].style.visibility = 'visible';",

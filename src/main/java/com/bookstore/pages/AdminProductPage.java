@@ -135,6 +135,35 @@ public class AdminProductPage extends BasePage {
         return this;
     }
 
+    public int findProductIndexByTitle(String title) {
+        LoggerHelper.info("[ADMIN][PRODUCT_PAGE] Tìm sản phẩm theo title: " + title);
+
+        try {
+            for (int i = 0; i < productNames.size(); i++) {
+                String actualTitle = productNames.get(i).getText().trim();
+                LoggerHelper.info("[ADMIN][PRODUCT_PAGE] Index " + i + " | Title = " + actualTitle);
+
+                if (actualTitle.equalsIgnoreCase(title) || actualTitle.contains(title)) {
+                    LoggerHelper.info("[ADMIN][PRODUCT_PAGE] Tìm thấy sản phẩm tại index: " + i);
+                    return i;
+                }
+            }
+        } catch (Exception e) {
+            LoggerHelper.warn("[ADMIN][PRODUCT_PAGE] Không tìm được sản phẩm: " + e.getMessage());
+        }
+
+        LoggerHelper.warn("[ADMIN][PRODUCT_PAGE] Không tìm thấy sản phẩm: " + title);
+        return -1;
+    }
+
+    public AdminProductPage clickEditByTitle(String title) {
+        int index = findProductIndexByTitle(title);
+        if (index < 0) {
+            throw new NoSuchElementException("Cannot find product to edit: " + title);
+        }
+        return clickEditAt(index);
+    }
+
     public AdminProductPage clickDeleteAt(int index) {
         LoggerHelper.info("[ADMIN][PRODUCT_PAGE] Click nút xóa sản phẩm tại index: " + index);
         clickElement(listDeleteBtns.get(index));
@@ -145,6 +174,14 @@ public class AdminProductPage extends BasePage {
         return this;
     }
 
+    public AdminProductPage clickDeleteByTitle(String title) {
+        int index = findProductIndexByTitle(title);
+        if (index < 0) {
+            throw new NoSuchElementException("Cannot find product to delete: " + title);
+        }
+        return clickDeleteAt(index);
+    }
+
     public AdminProductPage clickCancelDeleteAt(int index) {
         LoggerHelper.info("[ADMIN][PRODUCT_PAGE] Click xóa rồi hủy xóa sản phẩm tại index: " + index);
         clickElement(listDeleteBtns.get(index));
@@ -153,6 +190,14 @@ public class AdminProductPage extends BasePage {
         clickElement(btnCancelDelete);
 
         return this;
+    }
+
+    public AdminProductPage clickCancelDeleteByTitle(String title) {
+        int index = findProductIndexByTitle(title);
+        if (index < 0) {
+            throw new NoSuchElementException("Cannot find product to cancel delete: " + title);
+        }
+        return clickCancelDeleteAt(index);
     }
 
     public String getNotificationMessage() {

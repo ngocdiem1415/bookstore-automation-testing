@@ -69,7 +69,6 @@ public class ProductDetailPage extends BasePage {
 
     public ProductDetailPage clickAddToCart() {
         clickElement(btnAddToCart);
-        waitForLoadProductToCart();
         return this;
     }
 

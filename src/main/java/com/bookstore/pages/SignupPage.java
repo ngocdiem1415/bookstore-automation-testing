@@ -1,4 +1,5 @@
 package com.bookstore.pages;
+
 import org.openqa.selenium.*;
 import org.openqa.selenium.support.FindBy;
 import org.openqa.selenium.support.ui.ExpectedConditions;
@@ -35,8 +36,8 @@ public class SignupPage extends BasePage {
     @FindBy(css = "[data-testid='register-submit-btn']")
     private WebElement btnRegisterSubmit;
 
-    @FindBy(css = "[data-testid='register-error-message']")
-    private WebElement lblRegisterErrorMessage;
+    @FindBy(css = "[data-testid='register-message']")
+    private WebElement lblRegisterMessage;
 
     @FindBy(css = "[data-testid='register-pass-warning']")
     private WebElement pRegisterCheckPwdMessage;
@@ -113,7 +114,10 @@ public class SignupPage extends BasePage {
     public SignupPage clickSubmitExpectingFailure() {
         WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
         ((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView(true);", btnRegisterSubmit);
-        try { Thread.sleep(500); } catch (InterruptedException e) {}
+        try {
+            Thread.sleep(500);
+        } catch (InterruptedException e) {
+        }
         if (!btnRegisterSubmit.isEnabled()) {
             System.out.println("[DEBUG] Nút đang bị khóa, dùng JS Click để ép gửi form...");
             ((JavascriptExecutor) driver).executeScript("arguments[0].click();", btnRegisterSubmit);
@@ -124,7 +128,7 @@ public class SignupPage extends BasePage {
     }
 
     public String getErrorMessage() {
-        return getTextOf(lblRegisterErrorMessage);
+        return getTextOf(lblRegisterMessage);
     }
 
     public String getCheckPwdWarning() {
@@ -132,7 +136,8 @@ public class SignupPage extends BasePage {
     }
 
     public boolean isSubmitButtonEnabled() {
-        return btnRegisterSubmit.isDisplayed() && btnRegisterSubmit.isEnabled();    }
+        return btnRegisterSubmit.isDisplayed() && btnRegisterSubmit.isEnabled();
+    }
 
     public String getCurrentUrl() {
         return driver.getCurrentUrl();
@@ -172,11 +177,8 @@ public class SignupPage extends BasePage {
         return waitForUrlContains("/signup");
     }
 
-    public String getMessageAndAccept() {
-        Alert alert = wait.until(ExpectedConditions.alertIsPresent());
-        String alertText = alert.getText();
-        alert.accept();
-        return alertText;
+    public String getMessage() {
+        return getTextOf(lblRegisterMessage);
     }
 
 }

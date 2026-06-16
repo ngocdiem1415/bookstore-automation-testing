@@ -126,7 +126,7 @@ public class CheckoutPage extends BasePage {
         return this;
     }
 
-    public InvoicePage clickBuyExpectingSuccess() throws InterruptedException {
+    public InvoiceDetailPage clickBuyExpectingSuccess() throws InterruptedException {
         WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
         // scroll xuống nút
         scrollToElement(btnBuy);
@@ -137,10 +137,10 @@ public class CheckoutPage extends BasePage {
         } catch (Exception e) {
             jsClick(btnBuy);
         }
-        return PageFactoryManager.getInvoicePage(driver, baseUrl);
+        return PageFactoryManager.getInvoiceDetailPage(driver, baseUrl);
     }
 
-    public InvoicePage clickBuyExpectingFailure() throws InterruptedException {
+    public InvoiceDetailPage clickBuyExpectingFailure() throws InterruptedException {
         WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
         // scroll xuống nút
         scrollToElement(btnBuy);
@@ -151,7 +151,7 @@ public class CheckoutPage extends BasePage {
         } catch (Exception e) {
             jsClick(btnBuy);
         }
-        return PageFactoryManager.getInvoicePage(driver, baseUrl);
+        return PageFactoryManager.getInvoiceDetailPage(driver, baseUrl);
     }
 
 
