@@ -2,7 +2,9 @@ package com.bookstore.pages;
 
 import com.bookstore.factory.PageFactoryManager;
 import com.bookstore.utils.LoggerHelper;
-import org.openqa.selenium.*;
+import org.openqa.selenium.Alert;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.FindBy;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.Select;
@@ -62,7 +64,7 @@ public class CheckoutPage extends BasePage {
     }
 
     public CheckoutPage enterPhone(String phone) {
-        System.out.println("[CheckoutPage] Entering phone: " + phone);
+        LoggerHelper.info("[CHECKOUT_PAGE] Nhập số điện thoại: " + phone);
         clearAndSendText(txtPhone, phone);
         return this;
     }
@@ -75,8 +77,7 @@ public class CheckoutPage extends BasePage {
 
     public CheckoutPage selectCity(String cityValue) {
         LoggerHelper.info("[CHECKOUT_PAGE] Chọn tỉnh/thành phố: " + cityValue);
-        new Select(waitUntilClickable(selCity))
-                .selectByVisibleText(cityValue);
+        new Select(waitUntilClickable(selCity)).selectByVisibleText(cityValue);
         try {
             sleep(600);
         } catch (InterruptedException ignored) {
@@ -126,9 +127,8 @@ public class CheckoutPage extends BasePage {
         return this;
     }
 
-    public InvoiceDetailPage clickBuyExpectingSuccess() throws InterruptedException {
+    public InvoicePage clickBuyExpectingSuccess() throws InterruptedException {
         WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
-        // scroll xuống nút
         scrollToElement(btnBuy);
         wait.until(ExpectedConditions.elementToBeClickable(btnBuy));
         sleep(500);
@@ -137,23 +137,36 @@ public class CheckoutPage extends BasePage {
         } catch (Exception e) {
             jsClick(btnBuy);
         }
-        return PageFactoryManager.getInvoiceDetailPage(driver, baseUrl);
+        wait.until(driver -> driver.getCurrentUrl().contains("/invoice"));
+        return PageFactoryManager.getInvoicePage(driver, baseUrl);
     }
 
-    public InvoiceDetailPage clickBuyExpectingFailure() throws InterruptedException {
+    public CheckoutPage clickBuyExpectingPaymentRedirect() throws InterruptedException {
         WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
-        // scroll xuống nút
         scrollToElement(btnBuy);
-        clickElement(btnBuy);
+        wait.until(ExpectedConditions.elementToBeClickable(btnBuy));
         sleep(500);
         try {
             btnBuy.click();
         } catch (Exception e) {
             jsClick(btnBuy);
         }
-        return PageFactoryManager.getInvoiceDetailPage(driver, baseUrl);
+        wait.until(driver -> driver.getCurrentUrl().contains("vnpayment.vn"));
+        return this;
     }
 
+    public CheckoutPage clickBuyExpectingFailure() throws InterruptedException {
+        WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
+        scrollToElement(btnBuy);
+        wait.until(ExpectedConditions.elementToBeClickable(btnBuy));
+        sleep(500);
+        try {
+            btnBuy.click();
+        } catch (Exception e) {
+            jsClick(btnBuy);
+        }
+        return this;
+    }
 
     public boolean isBuyButtonEnabled() {
         try {
@@ -181,7 +194,7 @@ public class CheckoutPage extends BasePage {
         try {
             Alert alert = wait.until(ExpectedConditions.alertIsPresent());
             String text = alert.getText().trim();
-            LoggerHelper.info("[CHECKOUT_PAGE] Alert text: " + text);
+            LoggerHelper.info("[CHECKOUT_PAGE] Nội dung alert: " + text);
             alert.accept();
             return text;
         } catch (Exception e) {
@@ -190,15 +203,4 @@ public class CheckoutPage extends BasePage {
         }
     }
 
-    public String getAlertText() {
-        try {
-            WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(5));
-            Alert alert = wait.until(ExpectedConditions.alertIsPresent());
-            String alertText = alert.getText().trim();
-            alert.accept();
-            return alertText;
-        } catch (Exception e) {
-            return "";
-        }
-    }
 }
