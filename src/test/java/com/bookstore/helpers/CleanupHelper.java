@@ -8,7 +8,7 @@ import com.bookstore.pages.AdminProductPage;
 import com.bookstore.pages.AdminUserPage;
 import com.bookstore.pages.CartPage;
 import com.bookstore.pages.LoginPage;
-import com.bookstore.pages.InvoiceDetailPage;
+import com.bookstore.pages.InvoicePage;
 import com.bookstore.pages.ProfilePage;
 import com.bookstore.pages.components.HeaderComponent;
 import com.bookstore.utils.DataHelper;
@@ -153,25 +153,6 @@ public class CleanupHelper {
         }
     }
 
-    public static void completeAdminOrders(WebDriver driver, String baseUrl) {
-        if (CleanupRegistry.adminCompleteOrderIds.isEmpty()) {
-            return;
-        }
-
-        try {
-            loginAsAdmin(driver, baseUrl, "[CLEANUP][ORDER][COMPLETE]");
-            AdminOrderPage orderPage = PageFactoryManager.getAdminOrderPage(driver, baseUrl);
-
-            for (String orderId : CleanupRegistry.adminCompleteOrderIds) {
-                completeAdminOrder(orderPage, driver, baseUrl, orderId);
-            }
-        } catch (Exception e) {
-            LoggerHelper.warn("[CLEANUP][ORDER][COMPLETE] Không thể hoàn tất order bằng admin: " + e.getMessage());
-        } finally {
-            CleanupRegistry.adminCompleteOrderIds.clear();
-        }
-    }
-
     public static void cancelAdminOrders(WebDriver driver, String baseUrl) {
         if (CleanupRegistry.adminCancelOrderIds.isEmpty()) {
             return;
@@ -205,7 +186,8 @@ public class CleanupHelper {
             );
             waitForSessionCookie("[CLEANUP][ORDER][CUSTOMER_CANCEL]");
 
-            InvoiceDetailPage orderHistoryPage = PageFactoryManager.getInvoiceDetailPage(driver, baseUrl);
+            InvoicePage orderHistoryPage = PageFactoryManager.getInvoicePage(driver, baseUrl);
+            orderHistoryPage.open();
             for (String orderId : CleanupRegistry.customerCancelOrderIds) {
                 orderHistoryPage.cancelOrderById(orderId);
             }
@@ -257,19 +239,15 @@ public class CleanupHelper {
         categoryPage.open();
     }
 
-    public static void completeAdminOrder(AdminOrderPage orderPage, WebDriver driver, String baseUrl, String orderId) {
-        LoggerHelper.info("[CLEANUP][ORDER][COMPLETE] Hoàn tất mã đơn: " + orderId);
+    public static void shipAdminOrder(AdminOrderPage orderPage, WebDriver driver, String baseUrl, String orderId) {
+        LoggerHelper.info("[CLEANUP][ORDER][SHIPPING] Chuyển đơn hàng sang Shipping, mã đơn: " + orderId);
         orderPage.open();
         orderPage.clickEditByOrderId(orderId);
 
         AdminOrderEditPage editPage = PageFactoryManager.getAdminOrderEditPage(driver, baseUrl);
-        editPage.selectOrderStatus("Shipping").clickSaveAndGetNotification();
-
-        orderPage.open();
-        orderPage.clickEditByOrderId(orderId);
-        editPage = PageFactoryManager.getAdminOrderEditPage(driver, baseUrl);
-        String notification = editPage.selectOrderStatus("Completed").clickSaveAndGetNotification();
-        LoggerHelper.info("[CLEANUP][ORDER][COMPLETE] Đã hoàn tất mã đơn: " + orderId + " | " + notification);
+        String notification = editPage.selectOrderStatus("Shipping").clickSaveAndGetNotification();
+        LoggerHelper.info("[CLEANUP][ORDER][SHIPPING] Đã chuyển đơn hàng sang Shipping, mã đơn: "
+                + orderId + " | " + notification);
     }
 
     public static void cancelAdminOrder(AdminOrderPage orderPage, WebDriver driver, String baseUrl, String orderId) {
