@@ -3,7 +3,7 @@ name: Bookstore Automation Tests
 on:
   push:
     branches:
-      - cdci
+      - cicd
 
 env:
   TZ: Asia/Bangkok
