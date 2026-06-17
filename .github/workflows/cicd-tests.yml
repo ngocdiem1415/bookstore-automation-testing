@@ -7,17 +7,17 @@ on:
   workflow_dispatch:
     inputs:
       deploy_sha:
-        description: Commit SHA from the deployed web repository.
+        description: "Commit SHA from the deployed web repository."
         required: false
         type: string
       deploy_url:
-        description: Deployed bookstore URL. Falls back to APP_URL secret when empty.
+        description: "Deployed bookstore URL. Falls back to APP_URL secret when empty."
         required: false
         type: string
       trigger_source:
-        description: Run source: web-deploy or manual.
+        description: "Run source: web-deploy or manual."
         required: false
-        default: manual
+        default: "manual"
         type: string
 
 env:
