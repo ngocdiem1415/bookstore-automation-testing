@@ -4,6 +4,21 @@ on:
   push:
     branches:
       - cicd
+  workflow_dispatch:
+    inputs:
+      deploy_sha:
+        description: Commit SHA from the deployed web repository.
+        required: false
+        type: string
+      deploy_url:
+        description: Deployed bookstore URL. Falls back to APP_URL secret when empty.
+        required: false
+        type: string
+      trigger_source:
+        description: Run source: web-deploy or manual.
+        required: false
+        default: manual
+        type: string
 
 env:
   TZ: Asia/Bangkok
@@ -24,27 +39,46 @@ jobs:
           java-version: '11'
           cache: maven
 
-      - name: Validate APP_URL secret
+      - name: Resolve run context
         run: |
-          if [ -z "${{ secrets.APP_URL }}" ]; then
-            echo "APP_URL secret is required."
+          if [ "${{ github.event_name }}" = "push" ]; then
+            echo "TRIGGER_SOURCE=test-push" >> "$GITHUB_ENV"
+          elif [ -n "${{ github.event.inputs.trigger_source }}" ]; then
+            echo "TRIGGER_SOURCE=${{ github.event.inputs.trigger_source }}" >> "$GITHUB_ENV"
+          else
+            echo "TRIGGER_SOURCE=manual" >> "$GITHUB_ENV"
+          fi
+
+          if [ -n "${{ github.event.inputs.deploy_url }}" ]; then
+            echo "EFFECTIVE_APP_URL=${{ github.event.inputs.deploy_url }}" >> "$GITHUB_ENV"
+          elif [ -n "${{ secrets.APP_URL }}" ]; then
+            echo "EFFECTIVE_APP_URL=${{ secrets.APP_URL }}" >> "$GITHUB_ENV"
+          else
+            echo "APP_URL secret or deploy_url input is required."
             exit 1
           fi
 
-      - name: Run automation tests
-        run: mvn -B clean test -DappURL="${{ secrets.APP_URL }}" -Dbrowser=chrome -Dheadless=true
-
       - name: Resolve current report date
-        if: always()
         run: echo "REPORT_DATE=$(date +'%Y-%m-%d')" >> "$GITHUB_ENV"
+
+      - name: Run automation tests
+        run: |
+          set -o pipefail
+          mkdir -p /tmp/bookstore-ci-logs
+          mvn -B clean test -DappURL="$EFFECTIVE_APP_URL" -Dbrowser=chrome -Dheadless=true 2>&1 | tee "/tmp/bookstore-ci-logs/${TRIGGER_SOURCE}-maven-test.log"
+          status=${PIPESTATUS[0]}
+          mkdir -p "target/ci-logs" "target/reports/${REPORT_DATE}/logs"
+          cp "/tmp/bookstore-ci-logs/${TRIGGER_SOURCE}-maven-test.log" "target/ci-logs/${TRIGGER_SOURCE}-maven-test.log"
+          exit "$status"
 
       - name: Upload current day test report
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: bookstore-test-report-${{ env.REPORT_DATE }}
+          name: bookstore-test-report-${{ env.TRIGGER_SOURCE }}-${{ env.REPORT_DATE }}
           retention-days: 14
           if-no-files-found: warn
           path: |
             target/reports/${{ env.REPORT_DATE }}/
             target/surefire-reports/
+            target/ci-logs/
