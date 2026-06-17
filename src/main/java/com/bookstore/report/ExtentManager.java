@@ -24,7 +24,7 @@ public class ExtentManager {
 
         extent.setSystemInfo("Project Name", "Bookstore Ecommerce System");
         extent.setSystemInfo("Author", "Nguyen Thi Ngoc Diem");
-        extent.setSystemInfo("Environment", "Localhost");
+        extent.setSystemInfo("Environment", "Server");
         extent.setSystemInfo("Browser", "Chrome");
 
         return extent;
